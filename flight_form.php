@@ -1,7 +1,11 @@
 <?php
-include 'connection.php';
+include("connection.php");
+// connect to database MySQL
+// import $conn (which holds the connection to the database)
 
-if (isset($_POST['submit'])) {
+if (isset($_POST['submit']))
+    // check if the form is submitted
+{
   $flight_number = $_POST['flight_number'];
   $departure = $_POST['departure_city'];
   $arrival = $_POST['arrival_city'];
@@ -10,8 +14,11 @@ if (isset($_POST['submit'])) {
   $price = $_POST['price'];
   $airline = $_POST['airline'];
 
+  // collect form inputs and store them in PHP (temporarily, not in the database yet)
   $sql = "INSERT INTO flights (flight_number, departure_city, arrival_city, departure_date, return_date, price, airline)
           VALUES ('$flight_number', '$departure', '$arrival', '$departure_date', '$return_date', '$price', '$airline')";
+  // creates the SQL command that adds a new row into the flights table.
+  // each value corresponds to the columns listed inside the parentheses.
 
   if (mysqli_query($conn, $sql)) {
     echo "<script>alert('✅ Flight added successfully!');</script>";
@@ -19,6 +26,9 @@ if (isset($_POST['submit'])) {
     echo "Error: " . mysqli_error($conn);
   }
 }
+// mysqli_query($conn, $sql) → sends the SQL command to the database.
+// if successful → shows a JavaScript alert confirming success.
+// if not → displays the specific MySQL error message (helpful for debugging).
 ?>
 
 <!DOCTYPE html>
@@ -29,10 +39,10 @@ if (isset($_POST['submit'])) {
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* === 3D background gradient animation === */
+    /* === 3D gradient background with glowing stars === */
     body {
       font-family: 'Poppins', sans-serif;
-      background: radial-gradient(circle at 10% 20%, #2b1055, #7597de);
+      background: radial-gradient(circle at 10% 20%, #0a0a2a, #1e3c72, #2a5298);
       overflow-x: hidden;
       height: 100vh;
       display: flex;
@@ -46,33 +56,33 @@ if (isset($_POST['submit'])) {
       width: 2px;
       height: 2px;
       background: white;
-      animation: twinkle 4s infinite ease-in-out;
       border-radius: 50%;
+      animation: twinkle 4s infinite ease-in-out;
     }
 
     @keyframes twinkle {
       0%, 100% { opacity: 0.1; transform: scale(0.8); }
-      50% { opacity: 1; transform: scale(1.5); }
+      50% { opacity: 1; transform: scale(1.4); }
     }
 
-    /* === Floating 3D card === */
+    /* === 3D floating glass card === */
     .form-container {
+      width: 420px;
+      padding: 40px;
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 20px;
       box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
       backdrop-filter: blur(20px);
-      padding: 40px;
-      width: 420px;
       color: #fff;
       transform-style: preserve-3d;
       transform: rotateY(10deg) rotateX(5deg);
-      transition: transform 0.8s ease;
+      transition: all 0.8s ease;
     }
 
     .form-container:hover {
       transform: rotateY(0deg) rotateX(0deg) scale(1.03);
-      box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 60px rgba(0, 255, 255, 0.6);
     }
 
     h2 {
@@ -94,10 +104,11 @@ if (isset($_POST['submit'])) {
     }
 
     label {
-      font-weight: 500;
-      font-size: 14px;
       display: block;
+      font-weight: 500;
       margin-top: 15px;
+      font-size: 14px;
+      color: #ddd;
     }
 
     input {
@@ -106,7 +117,7 @@ if (isset($_POST['submit'])) {
       margin-top: 6px;
       border: none;
       border-radius: 10px;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.15);
       color: #fff;
       font-size: 14px;
       outline: none;
@@ -141,7 +152,7 @@ if (isset($_POST['submit'])) {
       box-shadow: 0 0 35px rgba(0,255,255,0.7);
     }
 
-    /* Floating animation for inputs */
+    /* Floating input animation */
     .form-container input, button {
       animation: float 3s ease-in-out infinite alternate;
     }
@@ -151,39 +162,54 @@ if (isset($_POST['submit'])) {
       100% { transform: translateY(-4px); }
     }
 
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      color: #00e0ff;
+      text-decoration: none;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    .back-link:hover {
+      color: #fff;
+    }
   </style>
 </head>
 <body>
-  <!-- Animated stars background -->
-  <div class="stars" style="top:10%;left:20%;animation-delay:1s;"></div>
-  <div class="stars" style="top:40%;left:70%;animation-delay:2s;"></div>
+  <!-- Animated background stars -->
+  <div class="stars" style="top:10%;left:25%;animation-delay:1s;"></div>
+  <div class="stars" style="top:35%;left:70%;animation-delay:2s;"></div>
   <div class="stars" style="top:60%;left:50%;animation-delay:3s;"></div>
+  <div class="stars" style="top:80%;left:30%;animation-delay:4s;"></div>
 
-  <form method="POST" class="form-container">
+  <form class="form-container" method="POST">
     <h2><span class="earth">🌍</span> Add Flight Info</h2>
 
-    <label>Flight Number:</label>
+    <label>Flight Number</label>
     <input type="text" name="flight_number" required>
 
-    <label>Departure City:</label>
+    <label>Departure City</label>
     <input type="text" name="departure_city" required>
 
-    <label>Arrival City:</label>
+    <label>Arrival City</label>
     <input type="text" name="arrival_city" required>
 
-    <label>Departure Date:</label>
+    <label>Departure Date</label>
     <input type="date" name="departure_date" required>
 
-    <label>Return Date:</label>
+    <label>Return Date</label>
     <input type="date" name="return_date">
 
-    <label>Price:</label>
+    <label>Price ($)</label>
     <input type="number" step="0.01" name="price" required>
 
-    <label>Airline:</label>
+    <label>Airline</label>
     <input type="text" name="airline" required>
 
     <button type="submit" name="submit">🚀 Add Flight</button>
+    <a href="menu.php" class="back-link">⬅ Back to Home</a>
   </form>
 </body>
 </html>
