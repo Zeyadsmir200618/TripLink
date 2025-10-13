@@ -19,7 +19,7 @@ $conn = new mysqli($servername, $username, $password, $dbname);
 // $conn is now your connection object used in other PHP files (like inserting or selecting data).
 // new mysqli() creates an object representing a connection to the MySQL server.
 if ($conn->connect_error) {
-    die("❌ Database connection failed: " . $conn->connect_error);
+    die(" Database connection failed: " . $conn->connect_error);
 }
 // check if there is any connection error
 
@@ -28,3 +28,4 @@ $conn->set_charset("utf8");
 //handling diff languages like arabic,accented,speical char
 //prevent errorsd like ???
 ?>
+
