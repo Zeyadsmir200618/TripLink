@@ -13,8 +13,8 @@ if (isset($_POST['submit']))
   $return_date = $_POST['return_date'];
   $price = $_POST['price'];
   $airline = $_POST['airline'];
-
-  // collect form inputs and store them in PHP (temporarily, not in the database yet)
+ // collect form inputs and store them in PHP (temporarily, not in the database yet)
+ 
   $sql = "INSERT INTO flights (flight_number, departure_city, arrival_city, departure_date, return_date, price, airline)
           VALUES ('$flight_number', '$departure', '$arrival', '$departure_date', '$return_date', '$price', '$airline')";
   // creates the SQL command that adds a new row into the flights table.
@@ -39,7 +39,6 @@ if (isset($_POST['submit']))
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* === 3D gradient background with glowing stars === */
     body {
       font-family: 'Poppins', sans-serif;
       background: radial-gradient(circle at 10% 20%, #0a0a2a, #1e3c72, #2a5298);
@@ -65,7 +64,6 @@ if (isset($_POST['submit']))
       50% { opacity: 1; transform: scale(1.4); }
     }
 
-    /* === 3D floating glass card === */
     .form-container {
       width: 420px;
       padding: 40px;
@@ -111,7 +109,7 @@ if (isset($_POST['submit']))
       color: #ddd;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -123,12 +121,24 @@ if (isset($_POST['submit']))
       outline: none;
       transition: all 0.3s ease;
       box-shadow: 0 0 0px rgba(0,255,255,0.3);
+      appearance: none;
     }
 
-    input:focus {
+    input:focus, select:focus {
       background: rgba(255,255,255,0.25);
       box-shadow: 0 0 15px cyan;
       transform: scale(1.02);
+    }
+
+    select {
+      cursor: pointer;
+      background-image: linear-gradient(90deg, rgba(0,255,255,0.2), rgba(0,255,255,0.1));
+      position: relative;
+    }
+
+    select option {
+      background: #0a0a2a;
+      color: #fff;
     }
 
     button {
@@ -152,8 +162,7 @@ if (isset($_POST['submit']))
       box-shadow: 0 0 35px rgba(0,255,255,0.7);
     }
 
-    /* Floating input animation */
-    .form-container input, button {
+    .form-container input, select, button {
       animation: float 3s ease-in-out infinite alternate;
     }
 
@@ -178,7 +187,7 @@ if (isset($_POST['submit']))
   </style>
 </head>
 <body>
-  <!-- Animated background stars -->
+  
   <div class="stars" style="top:10%;left:25%;animation-delay:1s;"></div>
   <div class="stars" style="top:35%;left:70%;animation-delay:2s;"></div>
   <div class="stars" style="top:60%;left:50%;animation-delay:3s;"></div>
@@ -206,7 +215,15 @@ if (isset($_POST['submit']))
     <input type="number" step="0.01" name="price" required>
 
     <label>Airline</label>
-    <input type="text" name="airline" required>
+    <select name="airline" required>
+      <option value="">-- Select Airline --</option>
+      <option value="EgyptAir">EgyptAir</option>
+      <option value="SaudiAir">SaudiAir</option>
+      <option value="Flynas">Flynas</option>
+      <option value="Flyadel">Flyadel</option>
+      <option value="QatarAir">QatarAir</option>
+      <option value="EmiratesAir">EmiratesAir</option>
+    </select>
 
     <button type="submit" name="submit">🚀 Add Flight</button>
     <a href="menu.php" class="back-link">⬅ Back to Home</a>
