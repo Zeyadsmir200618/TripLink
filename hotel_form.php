@@ -1,22 +1,26 @@
 <?php
 include("connection.php");
-//connect to database mysql
-//import $conn(which hold the database)
+// connect to database MySQL
+// import $conn (which holds the connection to the database)
 
 if (isset($_POST['submit']))
-    //check if the form is submitted
-{
+   //check if the form is submitted
+   {
   $city      = $_POST['city'];
   $hotel     = $_POST['hotel_name'];
   $checkin   = $_POST['check_in'];
   $checkout  = $_POST['check_out'];
   $price     = $_POST['price_per_night'];
   $rating    = $_POST['rating'];
-//collect forms data inpputs and store data in php not database
+  //collect forms data inpputs and store data in php not database
+
+  // Insert data into database
   $sql = "INSERT INTO hotels (hotel_name, city, check_in, check_out, price_per_night, rating)
           VALUES ('$hotel', '$city', '$checkin', '$checkout', '$price', '$rating')";
-// Creates the SQL command that adds a new row into the hotels table,direct insterted in the query.
-// Each value corresponds to the columns listed inside the parentheses.
+  // creates the SQL command that adds a new row into the flights table.
+  // each value corresponds to the columns listed inside the parentheses.
+
+
   if (mysqli_query($conn, $sql)) {
     echo "<script>alert('✅ Hotel added successfully!');</script>";
   } else {
@@ -24,10 +28,9 @@ if (isset($_POST['submit']))
   }
 }
 // mysqli_query($conn, $sql) → sends the SQL command to the database.
+// if successful → shows a JavaScript alert confirming success.
+// if not → displays the specific MySQL error message (helpful for debugging).
 
-// If successful → shows a JavaScript alert confirming success.
-
-// If not → displays the specific MySQL error message (helpful for debugging).
 ?>
 
 <!DOCTYPE html>
@@ -38,7 +41,6 @@ if (isset($_POST['submit']))
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 
-    /* === 3D gradient background with glowing stars === */
     body {
       font-family: 'Poppins', sans-serif;
       background: radial-gradient(circle at 10% 20%, #0a0a2a, #1e3c72, #2a5298);
@@ -64,7 +66,6 @@ if (isset($_POST['submit']))
       50% { opacity: 1; transform: scale(1.4); }
     }
 
-    /* === 3D floating glass card === */
     .form-container {
       width: 420px;
       padding: 40px;
@@ -110,7 +111,7 @@ if (isset($_POST['submit']))
       color: #ddd;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 12px;
       margin-top: 6px;
@@ -122,12 +123,19 @@ if (isset($_POST['submit']))
       outline: none;
       transition: all 0.3s ease;
       box-shadow: 0 0 0px rgba(0,255,255,0.3);
+      appearance: none;
+      cursor: pointer;
     }
 
-    input:focus {
+    input:focus, select:focus {
       background: rgba(255,255,255,0.25);
       box-shadow: 0 0 15px cyan;
       transform: scale(1.02);
+    }
+
+    select option {
+      background: #0a0a2a;
+      color: #fff;
     }
 
     button {
@@ -151,8 +159,7 @@ if (isset($_POST['submit']))
       box-shadow: 0 0 35px rgba(0,255,255,0.7);
     }
 
-    /* Floating input animation */
-    .form-container input, button {
+    .form-container input, select, button {
       animation: float 3s ease-in-out infinite alternate;
     }
 
@@ -177,7 +184,7 @@ if (isset($_POST['submit']))
   </style>
 </head>
 <body>
-  <!-- Animated background stars -->
+
   <div class="stars" style="top:10%;left:25%;animation-delay:1s;"></div>
   <div class="stars" style="top:35%;left:70%;animation-delay:2s;"></div>
   <div class="stars" style="top:60%;left:50%;animation-delay:3s;"></div>
@@ -187,10 +194,17 @@ if (isset($_POST['submit']))
     <h2><span class="earth">🌍</span> Add Hotel Info</h2>
 
     <label>City</label>
-    <input type="text" name="city" required>
+    <select name="city" id="city" required onchange="updateHotels()">
+      <option value="">-- Select City --</option>
+      <option value="Egypt">Egypt</option>
+      <option value="Saudi">Saudi</option>
+      <option value="Dubai">Dubai</option>
+    </select>
 
     <label>Hotel Name</label>
-    <input type="text" name="hotel_name" required>
+    <select name="hotel_name" id="hotel_name" required>
+      <option value="">-- Select Hotel --</option>
+    </select>
 
     <label>Check-In Date</label>
     <input type="date" name="check_in" required>
@@ -207,5 +221,29 @@ if (isset($_POST['submit']))
     <button type="submit" name="submit">✨ Add Hotel</button>
     <a href="menu.php" class="back-link">⬅ Back to Home</a>
   </form>
+
+  <script>
+    const hotelsByCity = {
+      Egypt: ["Cairo Grand Hotel", "Nile View Resort", "Pyramids Palace"],
+      Saudi: ["Riyadh Crown", "Jeddah Sea View", "Desert Pearl Hotel"],
+      Dubai: ["Burj Luxury Suites", "Palm Resort", "Downtown Royal"]
+    };
+
+    function updateHotels() {
+      const city = document.getElementById("city").value;
+      const hotelSelect = document.getElementById("hotel_name");
+      hotelSelect.innerHTML = '<option value="">-- Select Hotel --</option>';
+
+      if (hotelsByCity[city]) {
+        hotelsByCity[city].forEach(hotel => {
+          const option = document.createElement("option");
+          option.value = hotel;
+          option.textContent = hotel;
+          hotelSelect.appendChild(option);
+        });
+      }
+    }
+  </script>
+
 </body>
 </html>
