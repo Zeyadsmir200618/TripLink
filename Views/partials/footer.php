@@ -1,0 +1,1 @@
+<footer>© 2025 TripLink • Explore the World with Confidence</footer>

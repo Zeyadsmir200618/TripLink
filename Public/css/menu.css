@@ -1,0 +1,93 @@
+
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at 20% 30%, #001f3f, #003366, #001a33);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: #fff;
+      animation: bgShift 15s ease-in-out infinite;
+      background-size: 200% 200%;
+    }
+
+    @keyframes bgShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* --- NAVBAR --- */
+    
+
+    
+    /* --- HEADINGS --- */
+    h1 {
+      font-size: 3em;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: 2px;
+      color: #00e0ff;
+      margin-bottom: 10px;
+      text-shadow: 0 0 25px #00e0ff;
+      margin-top: 120px;
+    }
+
+    h2 {
+      text-align: center;
+      font-weight: 500;
+      margin-bottom: 35px;
+      color: #cce6ff;
+      font-size: 1.3em;
+    }
+
+    /* --- ACTION BUTTONS --- */
+    .actions {
+      margin-top: 40px;
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .actions a {
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+      padding: 14px 30px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00ffff, #007bff);
+      box-shadow: 0 0 20px rgba(0,255,255,0.4);
+      transition: 0.3s;
+    }
+
+    .actions a:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 0 35px rgba(0,255,255,0.7);
+      background: linear-gradient(135deg, #007bff, #00ffff);
+    }
+
+    /* --- PLANE ANIMATION --- */
+    .plane {
+      position: absolute;
+      top: 15%;
+      left: -100px;
+      font-size: 2em;
+      animation: flyAcross 12s linear infinite;
+    }
+
+    @keyframes flyAcross {
+      0% { transform: translateX(-200px) translateY(0); opacity: 0; }
+      10% { opacity: 1; }
+      50% { transform: translateX(50vw) translateY(-40px); }
+      100% { transform: translateX(110vw); opacity: 0; }
+    }
+
+   
+  
