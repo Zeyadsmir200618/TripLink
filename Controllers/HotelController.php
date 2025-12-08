@@ -1,29 +1,44 @@
 <?php
-require_once __DIR__ . '/../Models/HotelModel.php';
+// Correct paths using __DIR__
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Hotel.php';
 
 class HotelController {
-    private $model;
+    private $hotel;
+
     public function __construct() {
-        $this->model = new HotelModel();
+        $db = new Database();
+        $this->hotel = new Hotel($db->conn);
     }
 
-    public function add() {
-        if (isset($_POST['submit'])) {
-            $data = [
-                'city' => $_POST['city'],
-                'hotel_name' => $_POST['hotel_name'],
-                'check_in' => $_POST['check_in'],
-                'check_out' => $_POST['check_out'],
-                'price_per_night' => $_POST['price_per_night'],
-                'rating' => $_POST['rating']
-            ];
-            if ($this->model->insertHotel($data)) {
-                $success = "Hotel added successfully!";
-            } else {
-                $error = "Error adding hotel!";
-            }
+    public function handleRequest($postData = null) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $postData) {
+            $this->addHotel($postData);
+        } else {
+            $this->viewForm();
         }
-        include __DIR__ . '/../Views/Hotel.php';
+    }
+
+    public function addHotel($postData) {
+        if ($this->hotel->addHotel($postData)) {
+            $_SESSION['message'] = '✅ Hotel added successfully!';
+        } else {
+            $_SESSION['message'] = '❌ Failed to add hotel.';
+        }
+        header('Location: hotel_form.php'); // redirect after POST
+        exit;
+    }
+
+    private function viewForm() {
+        $message = $_SESSION['message'] ?? '';
+        unset($_SESSION['message']);
+        $this->render('hotel_form', ['message' => $message]);
+    }
+
+    private function render($view, $data = []) {
+        extract($data);
+        include __DIR__ . "/../views/{$view}.php";
     }
 }
 ?>
+
