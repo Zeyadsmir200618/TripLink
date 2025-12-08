@@ -1,37 +1,38 @@
 <?php
-require_once __DIR__ . '/../Models/FlightModel.php';
+session_start();
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../models/Flight.php';
 
 class FlightController {
-    private $model;
+    private $flight;
 
     public function __construct() {
-        $this->model = new FlightModel();
+        $db = new Database();
+        $this->flight = new Flight($db->conn);
     }
 
-    public function add() {
-        $success = null;
-        $error = null;
-
-        if (isset($_POST['submit'])) {
-            $data = [
-                'flight_number' => $_POST['flight_number'],
-                'departure_city' => $_POST['departure_city'],
-                'arrival_city' => $_POST['arrival_city'],
-                'departure_date' => $_POST['departure_date'],
-                'return_date' => $_POST['return_date'],
-                'price' => $_POST['price'],
-                'airline' => $_POST['airline']
-            ];
-
-            if ($this->model->insertFlight($data)) {
-                $success = "Flight added successfully!";
-            } else {
-                $error = "Error adding flight!";
-            }
+    // Handles both GET (show form) and POST (add flight)
+    public function handleRequest($postData = null) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $postData) {
+            $this->addFlight($postData);
+        } else {
+            $this->viewForm();
         }
+    }
 
-        // Load the view
-        include __DIR__ . '/../Views/addFlight.php';
+    public function addFlight($postData) {
+        if ($this->flight->addFlight($postData)) {
+            $_SESSION['message'] = '✅ Flight added successfully!';
+        } else {
+            $_SESSION['message'] = '❌ Failed to add flight.';
+        }
+        header('Location: index.php?controller=flight&action=handleRequest');
+        exit;
+    }
+
+    private function viewForm() {
+        $message = $_SESSION['message'] ?? '';
+        unset($_SESSION['message']);
+        include __DIR__ . '/../views/flight_form.php';
     }
 }
-?>
