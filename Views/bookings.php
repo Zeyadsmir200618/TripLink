@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>TripLink | View Data</title>
-  <link rel="stylesheet" href="/../Public/css/list.css">
+  <link rel="stylesheet" href="/Triplink/Public/css/bookings.css">
 </head>
 <body>
-
+<?php include __DIR__ . '/partials/navbar.php';?>
   <h2>🌍 Flights</h2>
   <div class="table-container">
     <table>
@@ -50,7 +50,7 @@
     </table>
   </div>
 
-  <footer>✨ TripLink | Travel Data Dashboard © 2025 ✈️</footer>
+<?php include __DIR__ . '/partials/footer.php';?>
 
 </body>
 </html>

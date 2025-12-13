@@ -1,6 +1,13 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Config",
+    "\\Controllers",
+    "\\Public",
+    "\\Public\\css",
+    "\\Views",
+    "\\Views\\partials"
   ],
+  "SelectedNode": "\\index.php",
   "PreviewInSolutionExplorer": false
 }

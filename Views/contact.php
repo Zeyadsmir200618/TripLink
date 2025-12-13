@@ -124,27 +124,12 @@ button:hover {
     background:#0052cc;
 }
 
-/* ---- Footer ---- */
-footer {
-    margin-top:40px;
-    text-align:center;
-    color:#666;
-    padding-bottom:30px;
-}
+
 </style>
 </head>
 <body>
 
-<!-- Navbar -->
-<div class="navbar">
-    <div class="logo">TripLink</div>
-    <div class="nav-links">
-        <a href="menu.php">Home</a>
-        <a href="about_us.php">About</a>
-        <a href="contact_us.php" class="active">Contact</a>
-    </div>
-</div>
-
+<?php include __DIR__ . '/partials/navbar.php';?>
 <!-- Contact Section -->
 <div class="contact-container">
     <h1>Contact Us</h1>
@@ -160,10 +145,6 @@ footer {
     <a href="menu.php" class="back-home">← Back to Home</a>
 </div>
 
-<!-- Footer -->
-<footer>
-    © 2025 TripLink — All Rights Reserved
-</footer>
-
+<?php include __DIR__ . '/partials/footer.php';?>
 </body>
 </html>
