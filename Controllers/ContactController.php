@@ -6,7 +6,12 @@ class ContactController {
 
     private function render($view, $data = []) {
         extract($data); // optional: pass data to views
-        include "app/views/{$view}.php";
+        $viewPath = __DIR__ . '/../Views/' . $view . '.php';
+        if (file_exists($viewPath)) {
+            include $viewPath;
+        } else {
+            echo "View not found: " . htmlspecialchars($viewPath);
+        }
     }
 }
 ?>
