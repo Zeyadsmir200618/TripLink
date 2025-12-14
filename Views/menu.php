@@ -107,7 +107,7 @@
     <main class="rooms-section">
         <h2>Available Rooms</h2>
         <div class="rooms-grid">
-            <?php foreach ($rooms as $room): ?>
+            <?php foreach ($hotels as $hotel): ?>
     <div class="room-card">
         <div class="room-image">
             <img src="<?= htmlspecialchars($room['image_url']) ?>" 

@@ -1,11 +1,9 @@
 <?php
-// Correct paths using __DIR__
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../models/Hotel.php';
 
 class HotelController {
     private $hotel;
-
     public function __construct() {
         $db = new Database();
         $this->hotel = new Hotel($db->conn);
@@ -28,6 +26,27 @@ class HotelController {
         header('Location: hotel_form.php'); // redirect after POST
         exit;
     }
+
+    public function showMenu() {
+    $hotels = $this->hotel->getAllHotels();
+    $rooms = [];
+    foreach ($hotels as $hotel) {
+        $rooms[] = [
+            'id' => $hotel['id'],
+            'room_name' => $hotel['hotel_name'], // use hotel name as room name
+            'hotel_name' => $hotel['hotel_name'],
+            'image_url' => '/TripLink/Public/images/default-room.jpg', // placeholder
+            'bed_type' => 'King', // placeholder
+            'max_guests' => 2, // placeholder
+            'amenities' => 'WiFi, AC', // placeholder
+            'price_per_night' => $hotel['price_per_night'],
+        ];
+    }
+
+    // pass $rooms to the view
+    include __DIR__ . '/../Views/menu.php';
+}
+
 
     private function viewForm() {
         $message = $_SESSION['message'] ?? '';

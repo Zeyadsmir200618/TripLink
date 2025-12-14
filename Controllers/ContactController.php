@@ -5,7 +5,7 @@ class ContactController {
     }
 
     private function render($view, $data = []) {
-        extract($data); // optional: pass data to views
+        extract($data); 
         $viewPath = __DIR__ . '/../Views/' . $view . '.php';
         if (file_exists($viewPath)) {
             include $viewPath;
