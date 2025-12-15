@@ -27,26 +27,6 @@ class HotelController {
         exit;
     }
 
-    public function showMenu() {
-    $hotels = $this->hotel->getAllHotels();
-    $hotels = [];
-    foreach ($hotels as $hotel) {
-        $hotels[] = [
-            'id' => $hotel['id'],
-            'room_name' => $hotel['hotel_name'], // use hotel name as room name
-            'hotel_name' => $hotel['hotel_name'],
-            'image_url' => '/TripLink/Public/images/default-room.jpg', // placeholder
-            'bed_type' => 'King', // placeholder
-            'max_guests' => 2, // placeholder
-            'amenities' => 'WiFi, AC', // placeholder
-            'price_per_night' => $hotel['price_per_night'],
-        ];
-    }
-
-    include __DIR__ . '/../Views/menu.php';
-}
-
-
     private function viewForm() {
         $message = $_SESSION['message'] ?? '';
         unset($_SESSION['message']);

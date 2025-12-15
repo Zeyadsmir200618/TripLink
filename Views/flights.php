@@ -243,6 +243,7 @@ $flightsToShow = $hasUserFilters ? $filteredFlights : $flights;
                     // Normalize keys to avoid undefined index notices with different DB column names
                     $flightNumber  = flight_value($flight, ['flight_number', 'Flight Number']);
                     $airline       = flight_value($flight, ['airline', 'Airline']);
+                    $flightClass   = flight_value($flight, ['flight_class', 'Flight Class']);
                     $departureCity = flight_value($flight, ['departure_city', 'source']);
                     $arrivalCity   = flight_value($flight, ['arrival_city', 'destination']);
                     $departDate    = flight_value($flight, ['departure_date', 'depart date']);
@@ -253,9 +254,6 @@ $flightsToShow = $hasUserFilters ? $filteredFlights : $flights;
                     <div class="room-info">
                         <h3>
                             <?= htmlspecialchars($flightNumber !== '' ? $flightNumber : 'Flight') ?>
-                            <?php if ($airline !== ''): ?>
-                                - <?= htmlspecialchars($airline) ?>
-                            <?php endif; ?>
                         </h3>
                         <p class="hotel-name">
                             <?= htmlspecialchars($departureCity) ?>
@@ -267,12 +265,18 @@ $flightsToShow = $hasUserFilters ? $filteredFlights : $flights;
                         <div class="room-details">
                             <span>🛫 Depart: <?= htmlspecialchars($departDate) ?></span>
                             <span>🛬 Return: <?= htmlspecialchars($returnDate) ?></span>
+                            <?php if ($flightClass !== ''): ?>
+                                <span>✈️ Class: <?= htmlspecialchars(ucfirst(strtolower($flightClass))) ?></span>
+                            <?php endif; ?>
+                            <?php if ($airline !== ''): ?>
+                                <span>🏢 Airline: <?= htmlspecialchars($airline) ?></span>
+                            <?php endif; ?>
                         </div>
+                    </div>
 
-                        <div class="room-footer">
-                            <span class="price">From EGP<?= number_format((float)$priceValue) ?></span>
-                            <button class="book-btn">Book Flight</button>
-                        </div>
+                    <div class="room-footer">
+                        <span class="price">From EGP<?= number_format((float)$priceValue) ?></span>
+                        <button class="book-btn">Book Flight</button>
                     </div>
                 </div>
             <?php endforeach; ?>

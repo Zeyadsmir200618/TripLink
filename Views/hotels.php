@@ -13,15 +13,73 @@ foreach ($hotelsFromDb as $hotel) {
         'hotel_name'     => $hotel['hotel_name'],
         'city'           => $hotel['city'],
         'image_url'      => '/TripLink/Public/images/default-hotel.jpg',
-        'bed_type'       => 'King',
-        'max_guests'     => 2,
-        'amenities'      => 'WiFi, AC, Room Service',
-        'price_per_night'=> $hotel['price_per_night'],
+        'bed_type'       => $hotel['bed_type'] ?? '',
+        'max_guests'     => $hotel['max_guests'] ?? 0,
+        'amenities'      => $hotel['amenities'] ?? 'WiFi, AC, Room Service',
+        'price_per_night'=> $hotel['price_per_night'] ?? 0,
         'rating'         => $hotel['rating'] ?? 4.5,
-        'check_in'       => $hotel['check_in'],
-        'check_out'      => $hotel['check_out']
+        'check_in'       => $hotel['check_in'] ?? '',
+        'check_out'      => $hotel['check_out'] ?? '',
+        'bed_count'      => $hotel['bed_count'] ?? 1,
     ];
 }
+
+$filters = [
+    'location'   => $_GET['location']   ?? '',
+    'search'     => $_GET['search']     ?? '',
+    'amenities'  => isset($_GET['amenities']) ? (array)$_GET['amenities'] : [],
+    'bed_type'   => $_GET['bed_type']   ?? '',
+];
+
+// Normalize string for comparisons
+function hotels_normalize(string $value): string {
+    return mb_strtolower(trim($value));
+}
+
+
+$filteredHotels = array_filter($hotels, function(array $hotel) use ($filters) {
+    $city       = hotels_normalize($hotel['city'] ?? '');
+    $name       = hotels_normalize($hotel['hotel_name'] ?? '');
+    $amenities  = hotels_normalize($hotel['amenities'] ?? '');
+    $bedType    = hotels_normalize($hotel['bed_type'] ?? '');
+
+    // Location (hero search)
+    if ($filters['location'] !== '') {
+        $needle = hotels_normalize($filters['location']);
+        if (mb_strpos($city, $needle) === false && mb_strpos($name, $needle) === false) {
+            return false;
+        }
+    }
+
+
+    // Amenities – require all selected amenities to be present in the amenities string
+    if (!empty($filters['amenities'])) {
+        foreach ($filters['amenities'] as $amenity) {
+            $needle = hotels_normalize($amenity);
+            if ($needle !== '' && mb_strpos($amenities, $needle) === false) {
+                return false;
+            }
+        }
+    }
+
+    if ($filters['bed_type'] !== '') {
+        if ($bedType === '' || $bedType !== hotels_normalize($filters['bed_type'])) {
+            return false;
+        }
+    }
+
+    return true;
+});
+
+// check if any filters are actually applied
+$hasHotelFilters =
+    trim($filters['location']) !== '' ||
+    trim($filters['search'])   !== '' ||
+    !empty($filters['amenities'])     ||
+    $filters['bed_type'] !== '';
+
+// Decide what to show
+$hotelsToShow = $hasHotelFilters ? $filteredHotels : $hotels;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -34,6 +92,7 @@ foreach ($hotelsFromDb as $hotel) {
 <body>
 <?php include __DIR__ . '/partials/navbar.php';?>
 
+<form class="hotel-filters" method="GET" action="">
 <div class="hero-section">
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -47,7 +106,13 @@ foreach ($hotelsFromDb as $hotel) {
             <div class="location-search">
                 <span class="search-label">Search Hotels</span>
                 <span class="search-icon">🔍</span>
-                <input type="text" placeholder="Insert location" class="location-input">
+                <input
+                    type="text"
+                    name="location"
+                    placeholder="Insert location"
+                    class="location-input"
+                    value="<?= htmlspecialchars($filters['location']) ?>"
+                >
             </div>
         </div>
     </div>
@@ -55,83 +120,64 @@ foreach ($hotelsFromDb as $hotel) {
 
 <div class="main-content">
     <aside class="sidebar">
-        <div class="filter-section">
-            <h3>Search</h3>
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" placeholder="Search rooms...">
-            </div>
-        </div>
         
         <div class="filter-section">
             <h3>Amenities</h3>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="wifi">
-                <span>Free WiFi</span>
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="ac">
-                <span>Air Conditioning</span>
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="room-service">
-                <span>Room Service</span>
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="minibar">
-                <span>Mini Bar</span>
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="ocean-view">
-                <span>Ocean View</span>
-            </label>
-            <label class="checkbox-label">
-                <input type="checkbox" name="amenity" value="balcony">
-                <span>Balcony</span>
-            </label>
+            <?php
+                $amenityOptions = [
+                    'wifi'        => 'Free WiFi',
+                    'ac'          => 'Air Conditioning',
+                    'room-service'=> 'Room Service',
+                    'minibar'     => 'Mini Bar',
+                    'ocean-view'  => 'Ocean View',
+                    'balcony'     => 'Balcony',
+                ];
+            ?>
+            <?php foreach ($amenityOptions as $value => $label): ?>
+                <label class="checkbox-label">
+                    <input
+                        type="checkbox"
+                        name="amenities[]"
+                        value="<?= htmlspecialchars($value) ?>"
+                        <?= in_array($value, $filters['amenities'], true) ? 'checked' : '' ?>
+                    >
+                    <span><?= htmlspecialchars($label) ?></span>
+                </label>
+            <?php endforeach; ?>
         </div>
         
         <div class="filter-section">
             <h3>Bed Type</h3>
-            <label class="radio-label">
-                <input type="radio" name="bed-type" value="king">
-                <span>King</span>
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="bed-type" value="queen">
-                <span>Queen</span>
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="bed-type" value="twin">
-                <span>Twin</span>
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="bed-type" value="single">
-                <span>Single</span>
-            </label>
+            <?php
+                $bedTypes = ['king' => 'King', 'queen' => 'Queen', 'twin' => 'Twin', 'single' => 'Single'];
+            ?>
+            <?php foreach ($bedTypes as $value => $label): ?>
+                <label class="radio-label">
+                    <input
+                        type="radio"
+                        name="bed_type"
+                        value="<?= htmlspecialchars($value) ?>"
+                        <?= $filters['bed_type'] === $value ? 'checked' : '' ?>
+                    >
+                    <span><?= htmlspecialchars($label) ?></span>
+                </label>
+            <?php endforeach; ?>
         </div>
-        
+
         <div class="filter-section">
-            <h3>Bed Count</h3>
-            <label class="radio-label">
-                <input type="radio" name="bed-count" value="1">
-                <span>1 Bed</span>
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="bed-count" value="2">
-                <span>2 Beds</span>
-            </label>
-            <label class="radio-label">
-                <input type="radio" name="bed-count" value="3">
-                <span>3 Beds</span>
-            </label>
+            <button type="submit" class="flight-search-button">Apply Filters</button>
         </div>
     </aside>
-   
+   </form>
+
     <main class="rooms-section">
         <h2>Available Rooms</h2>
+
+        <?php if (empty($hotelsToShow)): ?>
+            <div class="no-results">No results found.</div>
+        <?php else: ?>
         <div class="rooms-grid">
-            <?php foreach ($hotels as $hotel): ?>
+            <?php foreach ($hotelsToShow as $hotel): ?>
             <div class="room-card">
                 <div class="room-image">
                     <img src="<?= htmlspecialchars($hotel['image_url']) ?>" 
@@ -164,6 +210,7 @@ foreach ($hotelsFromDb as $hotel) {
             </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </main>
 </div>
 

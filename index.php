@@ -12,7 +12,6 @@ require_once __DIR__ . '/Controllers/ContactController.php';
 require_once __DIR__ . '/Controllers/FlightController.php';
 require_once __DIR__ . '/Controllers/HotelController.php';
 require_once __DIR__ . '/Controllers/AuthController.php';
-require_once __DIR__ . '/Controllers/MenuController.php';
 require_once __DIR__ . '/Controllers/OfferController.php';   // ✅ ADDED
 
 
@@ -46,13 +45,6 @@ switch ($controller) {
         $c = new HotelController();
         if (method_exists($c, $action)) $c->$action($_POST);
         break;
-
-	case 'menu':
-        $c = new MenuController();
-        $c->view();
-        break;
-
-
 
     case 'auth':
         $c = new AuthController($conn);
