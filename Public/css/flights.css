@@ -243,19 +243,27 @@ html body .navbar.scrolled {
 }
 
 .rooms-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
 .room-card {
     background: #ffffff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    padding: 20px 22px;
+    padding: 18px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.room-info {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 .room-info h3 {
@@ -273,17 +281,16 @@ html body .navbar.scrolled {
 .room-details {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 16px;
     font-size: 14px;
     color: #555;
-    margin-bottom: 6px;
+    margin-top: 2px;
 }
 
 .room-footer {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    gap: 16px;
 }
 
 .price {
@@ -309,6 +316,13 @@ html body .navbar.scrolled {
 .book-btn:hover {
     background: #f26a2a;
     transform: translateY(-1px);
+}
+
+.no-results {
+    padding: 40px 0;
+    text-align: center;
+    font-size: 16px;
+    color: #666;
 }
 
 /* Responsive */

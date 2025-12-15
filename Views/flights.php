@@ -6,7 +6,7 @@ $db = new Database();
 $flightModel = new Flight($db->conn);
 $flights = $flightModel->getAllFlights();
 
-// Helper to safely read values from different DB column name variants
+
 function flight_value(array $row, array $keys, $default = '')
 {
     foreach ($keys as $key) {
@@ -98,9 +98,20 @@ $filteredFlights = array_filter($flights, function ($flight) use ($filters) {
     return true;
 });
 
-// If no filters applied (all default) or no results, show all flights
-$hasUserFilters = trim($filters['from'] . $filters['to'] . $filters['depart'] . $filters['return']) !== '';
-$flightsToShow = ($hasUserFilters && !empty($filteredFlights)) ? $filteredFlights : $flights;
+// Determine if the user actually applied any filters (different from defaults)
+$hasUserFilters =
+    trim($filters['from']) !== '' ||
+    trim($filters['to']) !== '' ||
+    trim($filters['depart']) !== '' ||
+    trim($filters['return']) !== '' ||
+    $filters['payment_type'] !== 'any' ||
+    $filters['flight_class'] !== 'economy' ||
+    $filters['passengers'] !== '1' ||
+    $filters['trip_type'] === 'one_way';
+
+// If filters applied -> show filtered list (even if empty).
+// If no filters -> show all flights (can also be empty).
+$flightsToShow = $hasUserFilters ? $filteredFlights : $flights;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -220,6 +231,12 @@ $flightsToShow = ($hasUserFilters && !empty($filteredFlights)) ? $filteredFlight
 <div class="main-content">
     <main class="rooms-section" style="flex: 1;">
         <h2>Available Flights</h2>
+
+        <?php if (empty($flightsToShow)): ?>
+            <div class="no-results">
+                No results found.
+            </div>
+        <?php else: ?>
         <div class="rooms-grid">
             <?php foreach ($flightsToShow as $flight): ?>
                 <?php
@@ -260,6 +277,7 @@ $flightsToShow = ($hasUserFilters && !empty($filteredFlights)) ? $filteredFlight
                 </div>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
     </main>
 </div>
 
