@@ -3,11 +3,12 @@
     "",
     "\\Config",
     "\\Controllers",
+    "\\Models",
     "\\Public",
     "\\Public\\css",
     "\\Views",
     "\\Views\\partials"
   ],
-  "SelectedNode": "\\index.php",
+  "SelectedNode": "\\Views\\menu.php",
   "PreviewInSolutionExplorer": false
 }

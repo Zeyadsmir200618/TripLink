@@ -111,11 +111,11 @@
     <div class="room-card">
         <div class="room-image">
             <img src="<?= htmlspecialchars($hotel['image_url']) ?>" 
-                 alt="<?= htmlspecialchars($hotel['room_name']) ?>">
+                 alt="<?= htmlspecialchars($hotel['hotel_name']) ?>">
         </div>
 
         <div class="room-info">
-            <h3><?= htmlspecialchars($hotel['room_name']) ?></h3>
+            <h3><?= htmlspecialchars($hotel['hotel_name']) ?></h3>
             <p class="hotel-name"><?= htmlspecialchars($hotel['hotel_name']) ?></p>
 
             <div class="room-details">
@@ -129,21 +129,22 @@
 
             <div class="room-footer">
                 <span class="price">
-                    From $<?= number_format($hotel['price_per_night']) ?>/night
+                    From EGP<?= number_format($hotel['price_per_night']) ?>/night
                 </span>
 
-                <a href="book.php?room_id=<?= $hotel['id'] ?>" class="book-btn">
+                <a href="book.php?hotel_id=<?= $hotel['id'] ?>" class="book-btn">
                     Book Now
                 </a>
             </div>
         </div>
     </div>
 <?php endforeach; ?>
+        </div>
+    </main>
+</div>
 
-            
-            
-<?php include __DIR__ . '/partials/footer.php';?>
+<?php include __DIR__ . '/partials/footer.php'; ?>
 
-<script src="/TripLink/Public/js/menu.js"> </script>
+<script src="/TripLink/Public/js/menu.js"></script>
 </body>
 </html>

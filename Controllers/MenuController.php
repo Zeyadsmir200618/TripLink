@@ -35,7 +35,7 @@ class MenuController {
         
         foreach ($hotelsFromDb as $hotel) {
             $hotels[] = [
-                'id' => $hotel['id'],
+                'id' => $hotel['ID'],
                 'hotel_name' => $hotel['hotel_name'],
                 'city' => $hotel['city'],
                 'image_url' => '/TripLink/Public/images/default-hotel.jpg',
