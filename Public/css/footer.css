@@ -2,12 +2,15 @@
     background-color: #1a2b3d;
     color: #ffffff;
     padding: 60px 40px 30px;
+    width: 100%; 
+    box-sizing: border-box;
 }
 
 .footer-container {
-    max-width: 1400px;
-    margin: 0 auto;
+    margin: 0 auto; 
+    width: 100%;
 }
+
 
 .footer-content {
     display: grid;

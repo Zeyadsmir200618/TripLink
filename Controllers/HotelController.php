@@ -29,7 +29,7 @@ class HotelController {
 
     public function showMenu() {
     $hotels = $this->hotel->getAllHotels();
-    $rooms = [];
+    $hotels = [];
     foreach ($hotels as $hotel) {
         $hotels[] = [
             'id' => $hotel['id'],

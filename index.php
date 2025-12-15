@@ -12,6 +12,7 @@ require_once __DIR__ . '/Controllers/ContactController.php';
 require_once __DIR__ . '/Controllers/FlightController.php';
 require_once __DIR__ . '/Controllers/HotelController.php';
 require_once __DIR__ . '/Controllers/AuthController.php';
+require_once __DIR__ . '/Controllers/MenuController.php';
 require_once __DIR__ . '/Controllers/OfferController.php';   // ✅ ADDED
 
 
@@ -47,8 +48,8 @@ switch ($controller) {
         break;
 
 	case 'menu':
-        $c = new HotelController();
-        $c->showmenu();
+        $c = new MenuController();
+        $c->view();
         break;
 
 

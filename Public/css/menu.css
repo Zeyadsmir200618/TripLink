@@ -12,9 +12,9 @@ body {
     color: #333;
     line-height: 1.6;
     padding-top: 0;
+
 }
 
-/* Transparent Navbar at Top - Must override navbar.css */
 body .navbar,
 html body .navbar {
     position: fixed !important;

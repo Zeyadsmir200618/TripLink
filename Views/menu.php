@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/TripLink/Public/css/menu.css">
 </head>
 <body>
-<?php include __DIR__ . '/partials/navbar.php';?>
+<?php include __DIR__ . '/partials/navbar.php';;?>
 
 <div class="hero-section">
     <div class="hero-overlay"></div>
