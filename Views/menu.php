@@ -110,29 +110,29 @@
             <?php foreach ($hotels as $hotel): ?>
     <div class="room-card">
         <div class="room-image">
-            <img src="<?= htmlspecialchars($room['image_url']) ?>" 
-                 alt="<?= htmlspecialchars($room['room_name']) ?>">
+            <img src="<?= htmlspecialchars($hotel['image_url']) ?>" 
+                 alt="<?= htmlspecialchars($hotel['room_name']) ?>">
         </div>
 
         <div class="room-info">
-            <h3><?= htmlspecialchars($room['room_name']) ?></h3>
-            <p class="hotel-name"><?= htmlspecialchars($room['hotel_name']) ?></p>
+            <h3><?= htmlspecialchars($hotel['room_name']) ?></h3>
+            <p class="hotel-name"><?= htmlspecialchars($hotel['hotel_name']) ?></p>
 
             <div class="room-details">
-                <span>🛏️ <?= htmlspecialchars($room['bed_type']) ?></span>
-                <span>👥 Up to <?= (int)$room['max_guests'] ?> guests</span>
+                <span>🛏️ <?= htmlspecialchars($hotel['bed_type']) ?></span>
+                <span>👥 Up to <?= (int)$hotel['max_guests'] ?> guests</span>
             </div>
 
             <div class="room-amenities">
-                <span><?= htmlspecialchars($room['amenities']) ?></span>
+                <span><?= htmlspecialchars($hotel['amenities']) ?></span>
             </div>
 
             <div class="room-footer">
                 <span class="price">
-                    From $<?= number_format($room['price_per_night']) ?>/night
+                    From $<?= number_format($hotel['price_per_night']) ?>/night
                 </span>
 
-                <a href="book.php?room_id=<?= $room['id'] ?>" class="book-btn">
+                <a href="book.php?room_id=<?= $hotel['id'] ?>" class="book-btn">
                     Book Now
                 </a>
             </div>

@@ -46,6 +46,13 @@ switch ($controller) {
         if (method_exists($c, $action)) $c->$action($_POST);
         break;
 
+	case 'menu':
+        $c = new HotelController();
+        $c->showmenu();
+        break;
+
+
+
     case 'auth':
         $c = new AuthController($conn);
         if (method_exists($c, $action)) $c->$action($_POST);

@@ -31,7 +31,7 @@ class HotelController {
     $hotels = $this->hotel->getAllHotels();
     $rooms = [];
     foreach ($hotels as $hotel) {
-        $rooms[] = [
+        $hotels[] = [
             'id' => $hotel['id'],
             'room_name' => $hotel['hotel_name'], // use hotel name as room name
             'hotel_name' => $hotel['hotel_name'],
@@ -43,7 +43,6 @@ class HotelController {
         ];
     }
 
-    // pass $rooms to the view
     include __DIR__ . '/../Views/menu.php';
 }
 
