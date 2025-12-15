@@ -6,6 +6,17 @@ $db = new Database();
 $flightModel = new Flight($db->conn);
 $flights = $flightModel->getAllFlights();
 
+// Helper to safely read values from different DB column name variants
+function flight_value(array $row, array $keys, $default = '')
+{
+    foreach ($keys as $key) {
+        if (isset($row[$key]) && $row[$key] !== '') {
+            return $row[$key];
+        }
+    }
+    return $default;
+}
+
 // Read filters from query string
 $filters = [
     'trip_type'    => $_GET['trip_type']    ?? 'round_trip',
@@ -20,32 +31,66 @@ $filters = [
 
 // Simple in-memory filtering to keep things functional
 $filteredFlights = array_filter($flights, function ($flight) use ($filters) {
+    // Normalized values based on possible DB column names
+    $fromCity    = flight_value($flight, ['departure_city', 'source']);
+    $toCity      = flight_value($flight, ['arrival_city', 'destination']);
+    $departDate  = flight_value($flight, ['departure_date', 'depart date']);
+    $returnDate  = flight_value($flight, ['return_date', 'return date']);
+    $paymentType = strtolower(flight_value($flight, ['payment_type', 'payment type']));
+    $flightClass = strtolower(flight_value($flight, ['flight_class', 'Flight Class']));
+    $passengers  = (int) flight_value($flight, ['passenger_number', 'passenger_number'], 1);
+    $roundTrip   = (int) flight_value($flight, ['round_trip', 'round-trip'], 1); // 1 = round trip, 0 = one way
+
     // From city
     if ($filters['from'] !== '') {
-        if (stripos($flight['departure_city'], $filters['from']) === false &&
-            stripos($flight['departure_airport'] ?? '', $filters['from']) === false) {
+        if (stripos($fromCity, $filters['from']) === false) {
             return false;
         }
     }
 
     // To city
     if ($filters['to'] !== '') {
-        if (stripos($flight['arrival_city'], $filters['to']) === false &&
-            stripos($flight['arrival_airport'] ?? '', $filters['to']) === false) {
+        if (stripos($toCity, $filters['to']) === false) {
             return false;
         }
+    }
+
+    // Trip type: if user picked one_way, only show one-way flights (roundTrip == 0)
+    if ($filters['trip_type'] === 'one_way' && $roundTrip !== 0) {
+        return false;
     }
 
     // Depart date (on or after)
-    if ($filters['depart'] !== '') {
-        if (isset($flight['departure_date']) && $flight['departure_date'] < $filters['depart']) {
+    if ($filters['depart'] !== '' && $departDate !== '') {
+        if ($departDate < $filters['depart']) {
             return false;
         }
     }
 
-    // Return date (on or before)
-    if ($filters['return'] !== '') {
-        if (isset($flight['return_date']) && $flight['return_date'] > $filters['return']) {
+    // Return date (on or before) – ignore for one-way
+    if ($filters['trip_type'] !== 'one_way' && $filters['return'] !== '' && $returnDate !== '') {
+        if ($returnDate > $filters['return']) {
+            return false;
+        }
+    }
+
+    // Payment type (if not "any")
+    if ($filters['payment_type'] !== 'any') {
+        if ($paymentType === '' || $paymentType !== strtolower($filters['payment_type'])) {
+            return false;
+        }
+    }
+
+    // Flight class
+    if (!empty($filters['flight_class'])) {
+        if ($flightClass === '' || $flightClass !== strtolower($filters['flight_class'])) {
+            return false;
+        }
+    }
+
+    // Passengers: require there are at least that many seats (passenger_number >= selected)
+    if (!empty($filters['passengers'])) {
+        if ($passengers > 0 && $passengers < (int)$filters['passengers']) {
             return false;
         }
     }
@@ -177,24 +222,42 @@ $flightsToShow = ($hasUserFilters && !empty($filteredFlights)) ? $filteredFlight
         <h2>Available Flights</h2>
         <div class="rooms-grid">
             <?php foreach ($flightsToShow as $flight): ?>
-            <div class="room-card">
-                <div class="room-info">
-                    <h3><?= htmlspecialchars($flight['flight_number']) ?> - <?= htmlspecialchars($flight['airline']) ?></h3>
-                    <p class="hotel-name">
-                        <?= htmlspecialchars($flight['departure_city']) ?> → <?= htmlspecialchars($flight['arrival_city']) ?>
-                    </p>
+                <?php
+                    // Normalize keys to avoid undefined index notices with different DB column names
+                    $flightNumber  = flight_value($flight, ['flight_number', 'Flight Number']);
+                    $airline       = flight_value($flight, ['airline', 'Airline']);
+                    $departureCity = flight_value($flight, ['departure_city', 'source']);
+                    $arrivalCity   = flight_value($flight, ['arrival_city', 'destination']);
+                    $departDate    = flight_value($flight, ['departure_date', 'depart date']);
+                    $returnDate    = flight_value($flight, ['return_date', 'return date']);
+                    $priceValue    = flight_value($flight, ['price', 'Price'], 0);
+                ?>
+                <div class="room-card">
+                    <div class="room-info">
+                        <h3>
+                            <?= htmlspecialchars($flightNumber !== '' ? $flightNumber : 'Flight') ?>
+                            <?php if ($airline !== ''): ?>
+                                - <?= htmlspecialchars($airline) ?>
+                            <?php endif; ?>
+                        </h3>
+                        <p class="hotel-name">
+                            <?= htmlspecialchars($departureCity) ?>
+                            <?php if ($arrivalCity !== ''): ?>
+                                → <?= htmlspecialchars($arrivalCity) ?>
+                            <?php endif; ?>
+                        </p>
 
-                    <div class="room-details">
-                        <span>🛫 Depart: <?= htmlspecialchars($flight['departure_date']) ?></span>
-                        <span>🛬 Return: <?= htmlspecialchars($flight['return_date']) ?></span>
-                    </div>
+                        <div class="room-details">
+                            <span>🛫 Depart: <?= htmlspecialchars($departDate) ?></span>
+                            <span>🛬 Return: <?= htmlspecialchars($returnDate) ?></span>
+                        </div>
 
-                    <div class="room-footer">
-                        <span class="price">From EGP<?= number_format($flight['price']) ?></span>
-                        <button class="book-btn">Book Flight</button>
+                        <div class="room-footer">
+                            <span class="price">From EGP<?= number_format((float)$priceValue) ?></span>
+                            <button class="book-btn">Book Flight</button>
+                        </div>
                     </div>
                 </div>
-            </div>
             <?php endforeach; ?>
         </div>
     </main>
