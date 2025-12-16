@@ -36,14 +36,25 @@ class Hotel {
     }
 
     public function getHotelById($id) {
-        $sql = "SELECT * FROM {$this->table} WHERE id = ?";
-        $stmt = $this->conn->prepare($sql);
-        if (!$stmt) return null;
+        // Try lowercase id column first
+        try {
+            $sql = "SELECT * FROM {$this->table} WHERE id = ?";
+            $stmt = $this->conn->prepare($sql);
+        } catch (\mysqli_sql_exception $e) {
+            // Fallback for schemas that use uppercase ID
+            $sql = "SELECT * FROM {$this->table} WHERE ID = ?";
+            $stmt = $this->conn->prepare($sql);
+        }
+
+        if (!$stmt) {
+            return null;
+        }
 
         $stmt->bind_param("i", $id);
         $stmt->execute();
 
-        return $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result();
+        return $result ? $result->fetch_assoc() : null;
     }
 
     public function updateHotel($id, $data) {

@@ -209,6 +209,8 @@ html body .navbar.scrolled {
 .flight-search-action {
     display: flex;
     justify-content: flex-end;
+    width: 100%;
+    margin-top: 4px;
 }
 
 .flight-search-button {
@@ -222,6 +224,8 @@ html body .navbar.scrolled {
     cursor: pointer;
     font-family: 'Poppins', sans-serif;
     transition: background 0.2s ease, transform 0.1s ease;
+    width: 100%;
+    text-align: center;
 }
 
 .flight-search-button:hover {

@@ -1,5 +1,4 @@
 <?php
-// Front-end contact page (same UI style as menu.php)
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -12,7 +11,6 @@
 <body>
 
 <?php include __DIR__ . '/partials/navbar.php';?>
-<!-- Contact Section -->
 <div class="contact-container">
     <h1>Contact Us</h1>
     <p>Have questions? Send us a message and we’ll get back to you soon.</p>

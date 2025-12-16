@@ -55,12 +55,11 @@ $filteredFlights = array_filter($flights, function ($flight) use ($filters) {
         }
     }
 
-    // Trip type: if user picked one_way, only show one-way flights (roundTrip == 0)
+    
     if ($filters['trip_type'] === 'one_way' && $roundTrip !== 0) {
         return false;
     }
 
-    // Depart date (on or after)
     if ($filters['depart'] !== '' && $departDate !== '') {
         if ($departDate < $filters['depart']) {
             return false;

@@ -202,8 +202,8 @@ $hotelsToShow = $hasHotelFilters ? $filteredHotels : $hotels;
                             From EGP<?= number_format($hotel['price_per_night']) ?>/night
                         </span>
 
-                        <a href="book.php?hotel_id=<?= $hotel['id'] ?>" class="book-btn">
-                            Book Now
+                        <a href="/TripLink/Views/hotel_details.php?id=<?= $hotel['id'] ?>" class="book-btn">
+                            View Details
                         </a>
                     </div>
                 </div>

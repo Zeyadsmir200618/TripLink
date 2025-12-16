@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../models/User.php';
+require_once __DIR__ . '/../Models/User.php';
 
 class AuthController {
     private $userModel;
@@ -18,22 +18,37 @@ class AuthController {
         $password  = trim($data['password'] ?? '');
 
         if ($userInput === '' || $password === '') {
-            return ["status" => "error", "message" => "Please fill in both fields"];
+            $_SESSION['auth_error'] = "Please fill in both fields";
+            header('Location: /TripLink/Views/login.php');
+            exit;
         }
 
         // FIX: check both username AND email
         $user = $this->userModel->getByEmailOrUsername($userInput);
 
         if (!$user) {
-            return ["status" => "error", "message" => "Invalid username/email or password"];
+            $_SESSION['auth_error'] = "Invalid username/email or password";
+            header('Location: /TripLink/Views/login.php');
+            exit;
         }
 
         if (!password_verify($password, $user['password'])) {
-            return ["status" => "error", "message" => "Invalid username/email or password"];
+            $_SESSION['auth_error'] = "Invalid username/email or password";
+            header('Location: /TripLink/Views/login.php');
+            exit;
         }
 
-        $_SESSION['user_id'] = $user['id'];
-        return ["status" => "success"];
+        // Handle both 'id' and 'ID' column names
+        $userId = $user['id'] ?? $user['ID'] ?? null;
+        if (!$userId) {
+            $_SESSION['auth_error'] = "User ID not found";
+            header('Location: /TripLink/Views/login.php');
+            exit;
+        }
+
+        $_SESSION['user_id'] = $userId;
+        header('Location: /TripLink/Views/customer_dashboard.php');
+        exit;
     }
 
     public function register($data) {
@@ -43,26 +58,48 @@ class AuthController {
         $confirm = trim($data['confirm'] ?? '');
 
         if (!$username || !$email || !$password || !$confirm) {
-            return ["status" => "error", "message" => "All fields are required."];
+            $_SESSION['auth_error'] = "All fields are required.";
+            header('Location: /TripLink/Views/register.php');
+            exit;
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ["status" => "error", "message" => "Invalid email format."];
+            $_SESSION['auth_error'] = "Invalid email format.";
+            header('Location: /TripLink/Views/register.php');
+            exit;
         }
 
         if ($password !== $confirm) {
-            return ["status" => "error", "message" => "Passwords do not match."];
+            $_SESSION['auth_error'] = "Passwords do not match.";
+            header('Location: /TripLink/Views/register.php');
+            exit;
         }
 
         if ($this->userModel->getByEmail($email)) {
-            return ["status" => "error", "message" => "Email already registered."];
+            $_SESSION['auth_error'] = "Email already registered.";
+            header('Location: /TripLink/Views/register.php');
+            exit;
         }
 
         $hashed = password_hash($password, PASSWORD_DEFAULT);
         $ok = $this->userModel->create($username, $email, $hashed);
 
-        return $ok ? ["status" => "success"] :
-                     ["status" => "error", "message" => "Registration failed."];
+        if ($ok) {
+            // Auto-login after registration
+            $newUser = $this->userModel->getByEmail($email);
+            if ($newUser) {
+                $userId = $newUser['id'] ?? $newUser['ID'] ?? null;
+                if ($userId) {
+                    $_SESSION['user_id'] = $userId;
+                    header('Location: /TripLink/Views/customer_dashboard.php');
+                    exit;
+                }
+            }
+        }
+
+        $_SESSION['auth_error'] = "Registration failed.";
+        header('Location: /TripLink/Views/register.php');
+        exit;
     }
 
     public function logout() {
