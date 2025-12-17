@@ -24,17 +24,12 @@ class AuthController {
 
         $user = $this->userModel->getByEmailOrUsername($userInput);
 
-        if (!$user) {
-            $_SESSION['auth_error'] = "Invalid email or password";
-            header('Location: /TripLink/Views/login.php');
-            exit;
-        }
 
-        if (!password_verify($password, $user['password'])) {
-            $_SESSION['auth_error'] = "Invalid username/email or password";
-            header('Location: /TripLink/Views/login.php');
-            exit;
-        }
+		if (!$user || !password_verify($password, $user['password'])) {
+		$_SESSION['auth_error'] = "Invalid email or password";
+		header('Location: /TripLink/Views/login.php');
+		exit;
+		}
 
         $userId = $user['ID'] ?? null;
         if (!$userId) {
@@ -49,38 +44,13 @@ class AuthController {
     }
 
 
-
-/*if (!$user || !password_verify($password, $user['password'])) {
-    $_SESSION['auth_error'] = "Invalid username/email or password";
-    header('Location: /TripLink/Views/login.php');
-    exit;
-}
-
-$_SESSION['user_id'] = $user['id'];
-header('Location: /TripLink/Views/customer_dashboard.php');
-exit;
-
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
     public function register($data) {
-        $username = trim($data['username'] ?? '');
+        $username = trim($data['name'] ?? '');
         $email = trim($data['email'] ?? '');
         $password = trim($data['password'] ?? '');
         $confirm = trim($data['confirm'] ?? '');
 
-        if (!$username || !$email || !$password || !$confirm) {
+        if (!$name || !$email || !$password || !$confirm) {
             $_SESSION['auth_error'] = "All fields are required.";
             header('Location: /TripLink/Views/register.php');
             exit;
@@ -105,7 +75,7 @@ exit;
         }
 
         $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $ok = $this->userModel->create($username, $email, $hashed);
+        $ok = $this->userModel->create($name, $email, $hashed);
 
         if ($ok) {
             $newUser = $this->userModel->getByEmail($email);
