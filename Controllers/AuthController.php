@@ -13,7 +13,6 @@ class AuthController {
     }
 
     public function login($data) {
-        // FIX: correct variable name
         $userInput = trim($data['user_input'] ?? '');
         $password  = trim($data['password'] ?? '');
 
@@ -23,11 +22,10 @@ class AuthController {
             exit;
         }
 
-        // FIX: check both username AND email
         $user = $this->userModel->getByEmailOrUsername($userInput);
 
         if (!$user) {
-            $_SESSION['auth_error'] = "Invalid username/email or password";
+            $_SESSION['auth_error'] = "Invalid email or password";
             header('Location: /TripLink/Views/login.php');
             exit;
         }
@@ -38,8 +36,7 @@ class AuthController {
             exit;
         }
 
-        // Handle both 'id' and 'ID' column names
-        $userId = $user['id'] ?? $user['ID'] ?? null;
+        $userId = $user['ID'] ?? null;
         if (!$userId) {
             $_SESSION['auth_error'] = "User ID not found";
             header('Location: /TripLink/Views/login.php');
@@ -50,6 +47,32 @@ class AuthController {
         header('Location: /TripLink/Views/customer_dashboard.php');
         exit;
     }
+
+
+
+/*if (!$user || !password_verify($password, $user['password'])) {
+    $_SESSION['auth_error'] = "Invalid username/email or password";
+    header('Location: /TripLink/Views/login.php');
+    exit;
+}
+
+$_SESSION['user_id'] = $user['id'];
+header('Location: /TripLink/Views/customer_dashboard.php');
+exit;
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
 
     public function register($data) {
         $username = trim($data['username'] ?? '');
@@ -85,10 +108,9 @@ class AuthController {
         $ok = $this->userModel->create($username, $email, $hashed);
 
         if ($ok) {
-            // Auto-login after registration
             $newUser = $this->userModel->getByEmail($email);
             if ($newUser) {
-                $userId = $newUser['id'] ?? $newUser['ID'] ?? null;
+                $userId =  $newUser['ID'] ?? null;
                 if ($userId) {
                     $_SESSION['user_id'] = $userId;
                     header('Location: /TripLink/Views/customer_dashboard.php');

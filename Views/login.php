@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// If already logged in, go straight to dashboard
+// If already logged in, go to dashboard
 if (isset($_SESSION['user_id'])) {
     header('Location: /TripLink/Views/customer_dashboard.php');
     exit;
@@ -28,15 +28,6 @@ unset($_SESSION['auth_error']);
             <div class="auth-header">
                 <h1>Welcome to TripLink</h1>
                 <p>Sign in to plan your next adventure</p>
-            </div>
-
-            <button class="auth-google-btn" type="button">
-                <span class="google-icon">G</span>
-                Continue with Google
-            </button>
-
-            <div class="auth-divider">
-                <span>or</span>
             </div>
 
             <?php if (!empty($error)): ?>

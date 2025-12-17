@@ -30,15 +30,6 @@ unset($_SESSION['auth_error']);
                 <p>Join to start planning your next adventure</p>
             </div>
 
-            <button class="auth-google-btn" type="button">
-                <span class="google-icon">G</span>
-                Sign up with Google
-            </button>
-
-            <div class="auth-divider">
-                <span>or</span>
-            </div>
-
             <?php if (!empty($error)): ?>
                 <div class="auth-error">
                     <?= htmlspecialchars($error) ?>
@@ -48,12 +39,7 @@ unset($_SESSION['auth_error']);
             <form method="POST" action="/TripLink/index.php?controller=auth&action=register" class="auth-form">
                 <div class="auth-field">
                     <label for="username">Username</label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        placeholder="Choose a username"
-                        required
+                    <input type="text" id="username" name="username" placeholder="Choose a username" required
                     >
                 </div>
 

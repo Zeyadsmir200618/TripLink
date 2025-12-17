@@ -6,135 +6,74 @@ class User {
         $this->conn = $connection;
     }
 
-    /**
-     * Fetch user by email
-     */
-    public function getByEmail($email) {
-        // Try multiple column combinations
-        $queries = [
-            "SELECT id, username, email, password FROM users WHERE email = ?",
-            "SELECT id, name, email, password FROM users WHERE email = ?",
-            "SELECT id, email, password FROM users WHERE email = ?"
-        ];
+   public function getByEmail($email) {
+    $query = "SELECT ID, name, email, password FROM users WHERE email = ?";
 
-        foreach ($queries as $query) {
-            try {
-                $stmt = $this->conn->prepare($query);
-                if ($stmt) {
-                    $stmt->bind_param("s", $email);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    $user = $result ? $result->fetch_assoc() : null;
-                    if ($user) {
-                        return $user;
-                    }
-                }
-            } catch (\mysqli_sql_exception $e) {
-                continue;
-            }
-        }
-
-        // Fallback with uppercase ID
-        try {
-            $stmt = $this->conn->prepare("SELECT ID, email, password FROM users WHERE email = ?");
-            if ($stmt) {
-                $stmt->bind_param("s", $email);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $user = $result ? $result->fetch_assoc() : null;
-                if ($user && isset($user['ID'])) {
-                    $user['id'] = $user['ID'];
-                    unset($user['ID']);
-                }
-                return $user;
-            }
-        } catch (\mysqli_sql_exception $e) {
-            // Ignore
-        }
-
+    $stmt = $this->conn->prepare($query);
+    if (!$stmt) {
         return null;
     }
 
-    /**
-     * Fetch user by email OR username/name
-     */
-    public function getByEmailOrUsername($input) {
-        // Try multiple column combinations to support different database schemas
-        $queries = [
-            // Try with username column
-            "SELECT id, username, email, password FROM users WHERE email = ? OR username = ? LIMIT 1",
-            // Try with name column
-            "SELECT id, name, email, password FROM users WHERE email = ? OR name = ? LIMIT 1",
-            // Try with both username and name
-            "SELECT id, username, name, email, password FROM users WHERE email = ? OR username = ? OR name = ? LIMIT 1"
-        ];
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
 
-        foreach ($queries as $query) {
-            try {
-                $stmt = $this->conn->prepare($query);
-                if ($stmt) {
-                    // Bind parameters based on query
-                    if (strpos($query, 'username = ? OR name = ?') !== false) {
-                        // Query with both username and name
-                        $stmt->bind_param("sss", $input, $input, $input);
-                    } else {
-                        // Query with username OR name (2 params)
-                        $stmt->bind_param("ss", $input, $input);
-                    }
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    $user = $result ? $result->fetch_assoc() : null;
-                    if ($user) {
-                        return $user;
-                    }
-                }
-            } catch (\mysqli_sql_exception $e) {
-                // Try next query
-                continue;
-            }
-        }
-
-        // Final fallback: email-only
-        try {
-            $stmt = $this->conn->prepare("SELECT id, email, password FROM users WHERE email = ? LIMIT 1");
-            if ($stmt) {
-                $stmt->bind_param("s", $input);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                return $result ? $result->fetch_assoc() : null;
-            }
-        } catch (\mysqli_sql_exception $e) {
-            // Last resort: try with uppercase ID
-            $stmt = $this->conn->prepare("SELECT ID, email, password FROM users WHERE email = ? LIMIT 1");
-            if ($stmt) {
-                $stmt->bind_param("s", $input);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $user = $result ? $result->fetch_assoc() : null;
-                if ($user && isset($user['ID'])) {
-                    $user['id'] = $user['ID'];
-                    unset($user['ID']);
-                }
-                return $user;
-            }
-        }
-
+    $result = $stmt->get_result();
+    if (!$result) {
         return null;
     }
 
-    /**
-     * Create a new user (registration)
-     */
+    $user = $result->fetch_assoc();
+    if (!$user) {
+        return null;
+    }
+
+    $user['id'] = $user['ID'];
+    unset($user['ID']);
+
+    return $user;
+}
+
+   public function getByEmailOrUsername($input) {
+    $query = "
+        SELECT ID, name, email, password
+        FROM users
+        WHERE email = ? OR name = ?
+        LIMIT 1
+    ";
+
+    $stmt = $this->conn->prepare($query);
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param("ss", $input, $input);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    if (!$result) {
+        return null;
+    }
+
+    $user = $result->fetch_assoc();
+    if (!$user) {
+        return null;
+    }
+
+    $user['id'] = $user['ID'];
+    unset($user['ID']);
+
+    return $user;
+}
+
+
     public function create($username, $email, $hashedPassword): bool {
         try {
-            // Try insert with username column
-            $stmt = $this->conn->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+            $stmt = $this->conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
             if ($stmt) {
-                $stmt->bind_param("sss", $username, $email, $hashedPassword);
-                return $stmt->execute(); // returns true on success, false on failure
+                $stmt->bind_param("sss", $name, $email, $hashedPassword);
+                return $stmt->execute();
             }
         } catch (\mysqli_sql_exception $e) {
-            // Fallback for schema without username column: store only email + password
         }
 
         $stmt = $this->conn->prepare("INSERT INTO users (email, password) VALUES (?, ?)");

@@ -7,7 +7,7 @@ $offerModel = new Offer($db->conn);
 $offersFromDb = $offerModel->getAllOffers();
 $offers = [];
 
-// Helper function to calculate days between dates
+// function to calculate days between dates
 function calculateDays($checkIn, $checkOut) {
     if (empty($checkIn) || empty($checkOut)) return 7; // default
     try {
