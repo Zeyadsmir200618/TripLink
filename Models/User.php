@@ -1,130 +1,199 @@
 <?php
-class User {
-    private $conn;
 
-    public function __construct($connection) {
-        $this->conn = $connection;
+// ===========================
+// Validator Class
+// ===========================
+class Validator {
+
+    public static function sanitize(string $input): string {
+        return htmlspecialchars(strip_tags(trim($input)));
     }
 
-   public function getByEmail($email) {
-    $query = "SELECT ID, name, email, password FROM users WHERE email = ?";
-
-    $stmt = $this->conn->prepare($query);
-    if (!$stmt) {
-        return null;
+    public static function required(string $input): bool {
+        return !empty($input);
     }
 
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-
-    $result = $stmt->get_result();
-    if (!$result) {
-        return null;
+    public static function email(string $input): bool {
+        return filter_var($input, FILTER_VALIDATE_EMAIL) !== false;
     }
 
-    $user = $result->fetch_assoc();
-    if (!$user) {
-        return null;
+    public static function minLength(string $input, int $length): bool {
+        return strlen($input) >= $length;
     }
 
-    $user['id'] = $user['ID'];
-    unset($user['ID']);
-
-    return $user;
+    public static function match(string $input1, string $input2): bool {
+        return $input1 === $input2;
+    }
 }
 
-   public function getByEmailOrUsername($input) {
-    $query = "
-        SELECT ID, name, email, password
-        FROM users
-        WHERE email = ? OR name = ?
-        LIMIT 1
-    ";
+// ===========================
+// User Repository (CRUD + login)
+// ===========================
+class UserRepository {
+    private PDO $conn;
 
-    $stmt = $this->conn->prepare($query);
-    if (!$stmt) {
-        return null;
+    public function __construct(PDO $db) {
+        $this->conn = $db;
     }
 
-    $stmt->bind_param("ss", $input, $input);
-    $stmt->execute();
-
-    $result = $stmt->get_result();
-    if (!$result) {
-        return null;
+    public function getAll(): array {
+        // FIX: Added 'role' to select
+        $stmt = $this->conn->prepare("SELECT id, username, email, role FROM users");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    $user = $result->fetch_assoc();
-    if (!$user) {
-        return null;
+    public function getById(int $id): ?array {
+        // FIX: Added 'role' to select
+        $stmt = $this->conn->prepare("SELECT id, username, email, role FROM users WHERE id = :id");
+        $stmt->execute([':id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    $user['id'] = $user['ID'];
-    unset($user['ID']);
-
-    return $user;
-}
-
-
-    public function create($username, $email, $hashedPassword): bool {
-        try {
-            $stmt = $this->conn->prepare("INSERT INTO users (name, email, password) VALUES (?, ?, ?)");
-            if ($stmt) {
-                $stmt->bind_param("sss", $name, $email, $hashedPassword);
-                return $stmt->execute();
-            }
-        } catch (\mysqli_sql_exception $e) {
-        }
-
-        $stmt = $this->conn->prepare("INSERT INTO users (email, password) VALUES (?, ?)");
-        if (!$stmt) {
-            return false;
-        }
-        $stmt->bind_param("ss", $email, $hashedPassword);
-        return $stmt->execute();
+    public function getByEmail(string $email): ?array {
+        // FIX: Added 'role' to select
+        $stmt = $this->conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = :email");
+        $stmt->execute([':email' => $email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
     }
 
-    /**
-     * Verify login credentials (supports username OR email)
-     */
-    public function verifyLogin($userInput, $password) {
+    public function getByEmailOrUsername(string $input): ?array {
+        // FIX: Added 'role' to select so we can save it to session later
+        $stmt = $this->conn->prepare("SELECT id, username, email, password, role FROM users WHERE email = :input OR username = :input LIMIT 1");
+        $stmt->execute([':input' => $input]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    }
+
+    public function create(string $username, string $email, string $hashedPassword, string $role = 'user'): bool {
+        // FIX: Added 'role' to the INSERT statement to save the user type
+        $stmt = $this->conn->prepare("INSERT INTO users (username, email, password, role) VALUES (:username, :email, :password, :role)");
+        return $stmt->execute([
+            ':username' => $username,
+            ':email' => $email,
+            ':password' => $hashedPassword,
+            ':role' => $role
+        ]);
+    }
+
+    public function update(int $id, string $username, string $email): bool {
+        $stmt = $this->conn->prepare("UPDATE users SET username = :username, email = :email WHERE id = :id");
+        return $stmt->execute([
+            ':id' => $id,
+            ':username' => $username,
+            ':email' => $email
+        ]);
+    }
+
+    public function delete(int $id): bool {
+        $stmt = $this->conn->prepare("DELETE FROM users WHERE id = :id");
+        return $stmt->execute([':id' => $id]);
+    }
+
+    // FIX: Changed return type to ?array to return full user data (not just ID)
+    public function verifyLogin(string $userInput, string $password): ?array {
         $user = $this->getByEmailOrUsername($userInput);
-        if (!$user) return false;
-
+        if (!$user) return null;
+        
+        // Verify hash
         if (password_verify($password, $user['password'])) {
-            return $user['id']; // login successful, return user id
+            unset($user['password']); // Remove password for security before returning
+            return $user; // Returns [id, username, email, role]
         }
-        return false; // password mismatch
+        return null;
+    }
+}
+
+// ===========================
+// User Service (Business Logic + Validation)
+// ===========================
+class UserService {
+    private UserRepository $repository;
+
+    public function __construct() {
+        // Ensure Database class is loaded
+        if (class_exists('Database')) {
+            $db = Database::getInstance()->getConnection();
+            $this->repository = new UserRepository($db);
+        } else {
+             // Fallback include if not autoloaded
+             require_once __DIR__ . '/../config/database.php';
+             $db = Database::getInstance()->getConnection();
+             $this->repository = new UserRepository($db);
+        }
     }
 
-    /**
-     * Get all users from database
-     */
-    public function getAllUsers() {
-        try {
-            // Try to get users with all possible columns
-            $stmt = $this->conn->prepare("SELECT id, name, email, first_name, last_name, status FROM users ORDER BY id DESC");
-            if ($stmt) {
-                $stmt->execute();
-                $result = $stmt->get_result();
-                return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-            }
-        } catch (\mysqli_sql_exception $e) {
-            try {
-                $stmt = $this->conn->prepare("SELECT id, name, email FROM users ORDER BY id DESC");
-                if ($stmt) {
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-                }
-            } catch (\mysqli_sql_exception $e2) {
-                $stmt = $this->conn->query("SELECT ID, name, email FROM users ORDER BY ID DESC");
-                if ($stmt) {
-                    return $stmt->fetch_all(MYSQLI_ASSOC);
-                }
-            }
+    // CRUD Methods
+    public function getAll(): array {
+        return $this->repository->getAll();
+    }
+
+    public function getById(int $id): ?array {
+        return $this->repository->getById($id);
+    }
+
+    public function getByEmail(string $email): ?array {
+        return $this->repository->getByEmail($email);
+    }
+
+    public function getByEmailOrUsername(string $input): ?array {
+        return $this->repository->getByEmailOrUsername($input);
+    }
+
+    public function create(string $username, string $email, string $password, string $role = 'user'): array {
+        // Validation
+        if (!Validator::required($username) || !Validator::required($email) || !Validator::required($password)) {
+            return ['status' => 'error', 'message' => 'All fields are required'];
         }
-        return [];
+        if (!Validator::email($email)) {
+            return ['status' => 'error', 'message' => 'Invalid email format'];
+        }
+        if (!Validator::minLength($password, 6)) {
+            return ['status' => 'error', 'message' => 'Password must be at least 6 characters'];
+        }
+        
+        if ($this->repository->getByEmail($email)) {
+            return ['status' => 'error', 'message' => 'Email already registered'];
+        }
+
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        
+        $created = $this->repository->create($username, $email, $hashed, $role);
+
+        return $created ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Failed to create user'];
+    }
+
+    public function update(int $id, string $username, string $email): array {
+        if (!Validator::required($username) || !Validator::required($email)) {
+            return ['status' => 'error', 'message' => 'All fields are required'];
+        }
+        if (!Validator::email($email)) {
+            return ['status' => 'error', 'message' => 'Invalid email format'];
+        }
+
+        $updated = $this->repository->update($id, $username, $email);
+        return $updated ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Failed to update user'];
+    }
+
+    public function delete(int $id): array {
+        $deleted = $this->repository->delete($id);
+        return $deleted ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Failed to delete user'];
+    }
+
+    // FIX: Updated to handle array return from repository
+    public function verifyLogin(string $userInput, string $password): array {
+        $user = $this->repository->verifyLogin($userInput, $password);
+        
+        if ($user) {
+            // Return success with all data needed for the Session
+            return [
+                'status' => 'success', 
+                'user_id' => $user['id'],
+                'username' => $user['username'], // Needed for session
+                'role' => $user['role'] ?? 'user' // Needed for session
+            ];
+        } else {
+            return ['status' => 'error', 'message' => 'Invalid credentials'];
+        }
     }
 }
 ?>
