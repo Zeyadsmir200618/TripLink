@@ -299,6 +299,7 @@ function renderMenu(array $items): void {
             <a href="aboutus.php">About us</a>
             <a href="signup.php" class="btn-action btn-register">Register</a>
             <a href="login.php" class="btn-action btn-sign-in">Sign in</a>
+            
         </div>
 
         <div class="main-nav">

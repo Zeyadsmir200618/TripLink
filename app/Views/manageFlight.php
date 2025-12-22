@@ -12,15 +12,13 @@ if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role
     exit;
 }
 
-// --- 3. DATABASE CONNECTION ---
-$host = 'localhost';
-$dbname = 'booking_app_db';
-$username = 'root';
-$password = '';
+// --- 3. DATABASE CONNECTION - USING SINGLETON PATTERN ---
+require_once __DIR__ . '/../config/database.php';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    // Get the singleton instance
+    $db = Database::getInstance();
+    $pdo = $db->getConnection();
     
     // --- 4. FETCH DATA ---
     $stmt = $pdo->query("SELECT * FROM flights ORDER BY departure_date ASC");

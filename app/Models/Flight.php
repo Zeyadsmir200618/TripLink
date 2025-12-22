@@ -1,7 +1,7 @@
 <?php
 // app/Models/Flight.php
 
-//  REMOVED 'class Database' block because it is already defined in config/database.php
+// ❌ REMOVED 'class Database' block because it is already defined in config/database.php
 // Keeping it here causes the Fatal Error "Cannot declare class Database... name already in use"
 
 // ===========================

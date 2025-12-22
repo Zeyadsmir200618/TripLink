@@ -243,7 +243,14 @@ form.addEventListener('submit', async (e) => {
     const result = await response.json();
 
     if(result.status === 'success'){
-        window.location.href = 'menu.php';
+        // Check if the backend sent us a role
+        if (result.role === 'admin') {
+            // Redirect to the dashboard we created earlier
+            window.location.href = 'admin.php'; 
+        } else {
+            // Redirect regular users to the menu
+            window.location.href = 'menu.php';
+        }
     } else {
         errorBox.innerText = result.message;
         errorBox.style.display = 'block';
