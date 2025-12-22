@@ -6,19 +6,18 @@ error_reporting(E_ALL);
 session_start();
 
 /* ─────────────── CONFIG & CONTROLLERS ─────────────── */
-require_once __DIR__ . '/Config/database.php';
-require_once __DIR__ . '/Controllers/AboutController.php';
-require_once __DIR__ . '/Controllers/ContactController.php';
-require_once __DIR__ . '/Controllers/FlightController.php';
-require_once __DIR__ . '/Controllers/HotelController.php';
-require_once __DIR__ . '/Controllers/AuthController.php';
-require_once __DIR__ . '/Controllers/OfferController.php';   // ✅ ADDED
-
+// ✅ FIXED: Changed 'controllers' to 'Controllers' to match your folder structure
+require_once __DIR__ . '/../app/config/database.php';
+require_once __DIR__ . '/../app/Controllers/AboutController.php';
+require_once __DIR__ . '/../app/Controllers/ContactController.php';
+require_once __DIR__ . '/../app/Controllers/FlightController.php';
+require_once __DIR__ . '/../app/Controllers/HotelController.php';
+require_once __DIR__ . '/../app/Controllers/AuthController.php';
+require_once __DIR__ . '/../app/Controllers/OfferController.php';
 
 /* ─────────────── DB CONNECTION ─────────────── */
-$db = new Database();
-$conn = $db->conn;
-
+$db = Database::getInstance(); 
+$conn = $db->getConnection();
 
 /* ─────────────── ROUTER ─────────────── */
 $controller = $_GET['controller'] ?? 'about';
@@ -38,21 +37,31 @@ switch ($controller) {
 
     case 'flight':
         $c = new FlightController();
-        if (method_exists($c, $action)) $c->$action($_POST);
+        // ✅ FIXED: Added an 'else' block. If 'view' doesn't exist, it loads the form anyway.
+        if (method_exists($c, $action)) {
+            $c->$action($_POST);
+        } else {
+            $c->handleRequest($_POST); // Fallback to load the form
+        }
         break;
 
     case 'hotel':
         $c = new HotelController();
-        if (method_exists($c, $action)) $c->$action($_POST);
+        // ✅ FIXED: Added fallback for hotel too
+        if (method_exists($c, $action)) {
+            $c->$action($_POST);
+        } else {
+            $c->handleRequest($_POST);
+        }
         break;
 
     case 'auth':
         $c = new AuthController($conn);
         if (method_exists($c, $action)) $c->$action($_POST);
         break;
-
+        
     case 'offer':
-        $c = new OfferController();
+        $c = new OfferController($conn);
         if (method_exists($c, $action)) $c->$action($_POST);
         break;
 
