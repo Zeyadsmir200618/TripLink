@@ -1,92 +1,103 @@
 <?php
-class Hotel {
-    private $conn;
-    private $table = "hotels";
+// app/Models/Hotel.php
 
-    public function __construct($db) {
+// ❌ REMOVED 'class Database' block because it is already defined in config/database.php
+// Keeping it here causes the Fatal Error "Cannot declare class Database... name already in use"
+
+// ===========================
+// Hotel Model
+// ===========================
+// ✅ RENAMED from HotelRepository to Hotel so the Controller can use it.
+class Hotel {
+    private PDO $conn;
+    private string $table = "hotels";
+
+    public function __construct(PDO $db) {
         $this->conn = $db;
     }
 
-    public function addHotel($data) {
-        $sql = "INSERT INTO hotels (hotel_name, city, check_in, check_out, price_per_night, rating)
-                VALUES (?, ?, ?, ?, ?, ?)";
+    public function addHotel(array $data): bool {
+        // This SQL requires columns: hotel_name, city, check_in, check_out, price_per_night, stars
+        $sql = "INSERT INTO {$this->table} (hotel_name, city, check_in, check_out, price_per_night, stars)
+                VALUES (:hotel_name, :city, :check_in, :check_out, :price_per_night, :stars)";
+        
         $stmt = $this->conn->prepare($sql);
-
-        if (!$stmt) {
-            die("Prepare failed: " . $this->conn->error);
-        }
-
-        $stmt->bind_param(
-            "sssdds",
-            $data['hotel_name'],
-            $data['city'],
-            $data['check_in'],
-            $data['check_out'],
-            $data['price_per_night'],
-            $data['rating']
-        );
-        return $stmt->execute();
+        
+        return $stmt->execute([
+            ':hotel_name'      => $data['hotel_name'],
+            ':city'            => $data['city'],
+            ':check_in'        => $data['check_in'] ?? null,
+            ':check_out'       => $data['check_out'] ?? null,
+            ':price_per_night' => $data['price_per_night'],
+            ':stars'           => $data['stars']
+        ]);
     }
 
-    public function getAllHotels() {
-        $sql = "SELECT * FROM {$this->table}";
-        $result = $this->conn->query($sql);
-
-        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-    }
-
-    public function getHotelById($id) {
-        // Try lowercase id column first
-        try {
-            $sql = "SELECT * FROM {$this->table} WHERE id = ?";
-            $stmt = $this->conn->prepare($sql);
-        } catch (\mysqli_sql_exception $e) {
-            // Fallback for schemas that use uppercase ID
-            $sql = "SELECT * FROM {$this->table} WHERE ID = ?";
-            $stmt = $this->conn->prepare($sql);
-        }
-
-        if (!$stmt) {
-            return null;
-        }
-
-        $stmt->bind_param("i", $id);
+    public function getAll(): array {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} ORDER BY id DESC");
         $stmt->execute();
-
-        $result = $stmt->get_result();
-        return $result ? $result->fetch_assoc() : null;
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function updateHotel($id, $data) {
-        $sql = "UPDATE {$this->table}
-                SET hotel_name=?, city=?, check_in=?, check_out=?, price_per_night=?, rating=?
-                WHERE id=?";
-
-        $stmt = $this->conn->prepare($sql);
-        if (!$stmt) return false;
-
-        $stmt->bind_param(
-            "sssddsi",
-            $data['hotel_name'],
-            $data['city'],
-            $data['check_in'],
-            $data['check_out'],
-            $data['price_per_night'],
-            $data['rating'],
-            $id
-        );
-
-        return $stmt->execute();
+    public function getById(int $id): ?array {
+        $stmt = $this->conn->prepare("SELECT * FROM {$this->table} WHERE id = :id LIMIT 1");
+        $stmt->execute([':id' => $id]);
+        $hotel = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $hotel ?: null;
     }
 
-    public function deleteHotel($id) {
-        $sql = "DELETE FROM {$this->table} WHERE id = ?";
+    public function update(int $id, array $data): bool {
+        $sql = "UPDATE {$this->table} 
+                SET hotel_name = :hotel_name, city = :city, price_per_night = :price_per_night, stars = :stars
+                WHERE id = :id";
         $stmt = $this->conn->prepare($sql);
-        if (!$stmt) return false;
+        return $stmt->execute([
+            ':hotel_name'      => $data['hotel_name'],
+            ':city'            => $data['city'],
+            ':price_per_night' => $data['price_per_night'],
+            ':stars'           => $data['stars'],
+            ':id'              => $id
+        ]);
+    }
 
-        $stmt->bind_param("i", $id);
-        return $stmt->execute();
+    public function delete(int $id): bool {
+        $stmt = $this->conn->prepare("DELETE FROM {$this->table} WHERE id = :id");
+        return $stmt->execute([':id' => $id]);
     }
 }
 
+// ===========================
+// Hotel Service (Business Logic)
+// ===========================
+class HotelService {
+    // ✅ Updated type hint to use Hotel class
+    private Hotel $repository;
+
+    public function __construct() {
+        $db = Database::getInstance()->getConnection();
+        // ✅ Updated instantiation to use Hotel class
+        $this->repository = new Hotel($db);
+    }
+
+    public function addHotel(array $data): bool {
+        return $this->repository->addHotel($data);
+    }
+
+    public function getAll(): array {
+        return $this->repository->getAll();
+    }
+
+    public function getById(int $id): ?array {
+        return $this->repository->getById($id);
+    }
+
+    public function update(int $id, array $data): bool {
+        return $this->repository->update($id, $data);
+    }
+
+    public function delete(int $id): bool {
+        return $this->repository->delete($id);
+    }
+    
+}
 ?>
