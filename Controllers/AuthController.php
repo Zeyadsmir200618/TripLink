@@ -3,100 +3,132 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-require_once __DIR__ . '/../Models/User.php';
+// Require necessary files
+$userServicePath = __DIR__ . '/../models/User.php';
+$validatorPath   = __DIR__ . '/../core/Validator.php';
+$databasePath    = __DIR__ . '/../config/Database.php';
+
+if (!file_exists($userServicePath)) {
+    die("Error: User.php not found at $userServicePath");
+}
+if (!file_exists($validatorPath)) {
+    die("Error: Validator.php not found at $validatorPath");
+}
+if (!file_exists($databasePath)) {
+    die("Error: Database.php not found at $databasePath");
+}
+
+require_once $userServicePath;
+require_once $validatorPath;
+require_once $databasePath;
 
 class AuthController {
-    private $userModel;
+    private UserService $userService;
 
-    public function __construct($db) {
-        $this->userModel = new User($db);
+    public function __construct() {
+        $this->userService = new UserService();
     }
 
-    public function login($data) {
-        $userInput = trim($data['user_input'] ?? '');
+    /* -------------------------------------------------------
+     * LOGIN USER (UPDATED TO RETURN ROLE)
+     * ------------------------------------------------------- */
+    public function login(array $data): array {
+        $userInput = Validator::sanitize(trim($data['user_input'] ?? ''));
         $password  = trim($data['password'] ?? '');
 
-        if ($userInput === '' || $password === '') {
-            $_SESSION['auth_error'] = "Please fill in both fields";
-            header('Location: /TripLink/Views/login.php');
-            exit;
+        if (!Validator::required($userInput) || !Validator::required($password)) {
+            return ["status" => "error", "message" => "Please fill in both fields"];
         }
 
-        $user = $this->userModel->getByEmailOrUsername($userInput);
-
-
-		if (!$user || !password_verify($password, $user['password'])) {
-		$_SESSION['auth_error'] = "Invalid email or password";
-		header('Location: /TripLink/Views/login.php');
-		exit;
-		}
-
-        $userId = $user['ID'] ?? null;
-        if (!$userId) {
-            $_SESSION['auth_error'] = "User ID not found";
-            header('Location: /TripLink/Views/login.php');
-            exit;
+        $loginResult = $this->userService->verifyLogin($userInput, $password);
+        if ($loginResult['status'] !== 'success') {
+            return ["status" => "error", "message" => "Invalid username/email or password"];
         }
 
-        $_SESSION['user_id'] = $userId;
-        header('Location: /TripLink/Views/customer_dashboard.php');
-        exit;
+        // Store session data
+        $_SESSION['user_id'] = $loginResult['user_id'];
+        $_SESSION['username'] = $loginResult['username'];
+        $_SESSION['role'] = $loginResult['role'];
+
+        // *** THIS IS THE ONLY CHANGE ***
+        // We now send the role back so the login page knows where to redirect you.
+        return [
+            "status" => "success", 
+            "role" => $loginResult['role']
+        ];
     }
 
-
-    public function register($data) {
-        $username = trim($data['name'] ?? '');
-        $email = trim($data['email'] ?? '');
+    /* -------------------------------------------------------
+     * REGISTER NEW USER
+     * ------------------------------------------------------- */
+    public function register(array $data): array {
+        $username = Validator::sanitize(trim($data['username'] ?? ''));
+        $email    = Validator::sanitize(trim($data['email'] ?? ''));
         $password = trim($data['password'] ?? '');
-        $confirm = trim($data['confirm'] ?? '');
+        $confirm  = trim($data['confirm'] ?? '');
+        $role     = Validator::sanitize(trim($data['role'] ?? 'user'));
 
-        if (!$name || !$email || !$password || !$confirm) {
-            $_SESSION['auth_error'] = "All fields are required.";
-            header('Location: /TripLink/Views/register.php');
-            exit;
+        if (!Validator::required($username) || !Validator::required($email) ||
+            !Validator::required($password) || !Validator::required($confirm)) {
+            return ["status" => "error", "message" => "All fields are required."];
         }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $_SESSION['auth_error'] = "Invalid email format.";
-            header('Location: /TripLink/Views/register.php');
-            exit;
+        if (!Validator::email($email)) {
+            return ["status" => "error", "message" => "Invalid email format."];
         }
 
-        if ($password !== $confirm) {
-            $_SESSION['auth_error'] = "Passwords do not match.";
-            header('Location: /TripLink/Views/register.php');
-            exit;
+        if (!Validator::minLength($password, 6)) {
+            return ["status" => "error", "message" => "Password must be at least 6 characters."];
         }
 
-        if ($this->userModel->getByEmail($email)) {
-            $_SESSION['auth_error'] = "Email already registered.";
-            header('Location: /TripLink/Views/register.php');
-            exit;
+        if (!Validator::match($password, $confirm)) {
+            return ["status" => "error", "message" => "Passwords do not match."];
         }
 
-        $hashed = password_hash($password, PASSWORD_DEFAULT);
-        $ok = $this->userModel->create($name, $email, $hashed);
-
-        if ($ok) {
-            $newUser = $this->userModel->getByEmail($email);
-            if ($newUser) {
-                $userId =  $newUser['ID'] ?? null;
-                if ($userId) {
-                    $_SESSION['user_id'] = $userId;
-                    header('Location: /TripLink/Views/customer_dashboard.php');
-                    exit;
-                }
-            }
+        if ($this->userService->getByEmail($email)) {
+            return ["status" => "error", "message" => "Email already registered."];
         }
 
-        $_SESSION['auth_error'] = "Registration failed.";
-        header('Location: /TripLink/Views/register.php');
-        exit;
+        return $this->userService->create($username, $email, $password, $role);
     }
 
-    public function logout() {
+    /* -------------------------------------------------------
+     * LOGOUT
+     * ------------------------------------------------------- */
+    public function logout(): array {
         session_unset();
         session_destroy();
         return ["status" => "success"];
     }
+
+    /* =======================================================
+       CRUD OPERATIONS FOR USERS
+    ======================================================= */
+    public function listUsers(): array {
+        return $this->userService->getAll();
+    }
+
+    public function getUser(int $id): ?array {
+        return $this->userService->getById($id);
+    }
+
+    public function updateUser(int $id, array $data): array {
+        $username = Validator::sanitize(trim($data['username'] ?? ''));
+        $email    = Validator::sanitize(trim($data['email'] ?? ''));
+
+        if (!Validator::required($username) || !Validator::required($email)) {
+            return ["status" => "error", "message" => "All fields are required."];
+        }
+
+        if (!Validator::email($email)) {
+            return ["status" => "error", "message" => "Invalid email format."];
+        }
+
+        return $this->userService->update($id, $username, $email);
+    }
+
+    public function deleteUser(int $id): array {
+        return $this->userService->delete($id);
+    }
 }
+?>
