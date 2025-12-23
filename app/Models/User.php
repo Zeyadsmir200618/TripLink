@@ -84,6 +84,14 @@ class UserRepository {
         ]);
     }
 
+    public function updatePassword(int $id, string $hashedPassword): bool {
+        $stmt = $this->conn->prepare("UPDATE users SET password = :password WHERE id = :id");
+        return $stmt->execute([
+            ':id' => $id,
+            ':password' => $hashedPassword
+        ]);
+    }
+
     public function delete(int $id): bool {
         $stmt = $this->conn->prepare("DELETE FROM users WHERE id = :id");
         return $stmt->execute([':id' => $id]);
@@ -172,6 +180,22 @@ class UserService {
 
         $updated = $this->repository->update($id, $username, $email);
         return $updated ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Failed to update user'];
+    }
+
+    public function updatePassword(int $id, string $password, string $confirm): array {
+        if (!Validator::required($password) || !Validator::required($confirm)) {
+            return ['status' => 'error', 'message' => 'All fields are required'];
+        }
+        if (!Validator::minLength($password, 6)) {
+            return ['status' => 'error', 'message' => 'Password must be at least 6 characters'];
+        }
+        if (!Validator::match($password, $confirm)) {
+            return ['status' => 'error', 'message' => 'Passwords do not match'];
+        }
+
+        $hashed = password_hash($password, PASSWORD_DEFAULT);
+        $updated = $this->repository->updatePassword($id, $hashed);
+        return $updated ? ['status' => 'success'] : ['status' => 'error', 'message' => 'Failed to update password'];
     }
 
     public function delete(int $id): array {

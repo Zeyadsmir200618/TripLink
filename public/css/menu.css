@@ -130,66 +130,49 @@ body {
     background: #f8f9fa;
 }
 
-.hotels-container {
+.hotels-section .container {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.hotels-title {
+.section-title {
     font-size: 2rem;
     font-weight: 700;
     color: #333;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
     text-align: center;
 }
 
 .hotels-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 25px;
+    margin-bottom: 40px;
 }
 
 .hotel-card {
     background: white;
     border-radius: 12px;
-    overflow: hidden;
+    padding: 25px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e9ecef;
     display: flex;
     flex-direction: column;
 }
 
 .hotel-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
-}
-
-.hotel-image {
-    height: 180px;
-    background: linear-gradient(135deg, #003580 0%, #014194 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.hotel-icon {
-    font-size: 4rem;
-    opacity: 0.9;
-}
-
-.hotel-content {
-    padding: 20px;
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
 .hotel-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e9ecef;
 }
 
 .hotel-name {
@@ -201,60 +184,38 @@ body {
 }
 
 .hotel-stars {
-    display: flex;
-    gap: 2px;
-}
-
-.hotel-stars .star {
     font-size: 0.9rem;
+    color: #febb02;
+    white-space: nowrap;
 }
 
-.hotel-location {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #666;
-    font-size: 0.95rem;
-    margin-bottom: 15px;
+.hotel-info {
+    flex-grow: 1;
+    margin-bottom: 20px;
 }
 
-.location-icon {
-    font-size: 1rem;
-}
-
+.hotel-location,
 .hotel-dates {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 8px;
-    margin-bottom: 20px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-}
-
-.date-item {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.9rem;
-}
-
-.date-label {
+    margin-bottom: 10px;
     color: #666;
-    font-weight: 500;
+    font-size: 0.95rem;
 }
 
-.date-value {
-    color: #333;
-    font-weight: 600;
+.hotel-location .icon,
+.hotel-dates .icon {
+    font-size: 1rem;
 }
 
 .hotel-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: auto;
     padding-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #e9ecef;
+    margin-top: auto;
 }
 
 .hotel-price {
@@ -270,23 +231,23 @@ body {
 
 .price-label {
     font-size: 0.85rem;
-    color: #666;
+    color: #888;
 }
 
 .book-btn {
-    background: linear-gradient(90deg, #003580 0%, #004cb8 100%);
+    background: linear-gradient(135deg, #003580 0%, #004cb8 100%);
     color: white;
     border: none;
     padding: 12px 24px;
     border-radius: 6px;
     font-weight: 600;
-    font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
 }
 
 .book-btn:hover {
-    background: linear-gradient(90deg, #002861 0%, #003580 100%);
+    background: linear-gradient(135deg, #002861 0%, #003580 100%);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 53, 128, 0.3);
 }
@@ -303,20 +264,27 @@ body {
 .no-results-icon {
     font-size: 4rem;
     margin-bottom: 20px;
-    opacity: 0.5;
 }
 
 .no-results h3 {
     font-size: 1.5rem;
     color: #333;
     margin-bottom: 10px;
-    font-weight: 600;
 }
 
 .no-results p {
     color: #666;
     font-size: 1rem;
-    line-height: 1.6;
+}
+
+.no-results a {
+    color: #003580;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.no-results a:hover {
+    text-decoration: underline;
 }
 
 /* Content Section */

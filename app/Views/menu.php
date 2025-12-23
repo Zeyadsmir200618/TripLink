@@ -6,47 +6,57 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Database connection
 require_once __DIR__ . '/../config/database.php';
-$pdo = Database::getInstance()->getConnection();
 
 // Get search parameters
 $searchLocation = trim($_GET['location'] ?? '');
 $searchCheckIn = $_GET['check_in'] ?? '';
 $searchCheckOut = $_GET['check_out'] ?? '';
 
-// Build query based on search criteria
-$hotels = [];
+// Get database connection
+$db = Database::getInstance();
+$pdo = $db->getConnection();
+
+// Build query with filters
+$sql = "SELECT * FROM hotels WHERE 1=1";
 $params = [];
 
-try {
-    $sql = "SELECT * FROM hotels WHERE 1=1";
-    
-    // Filter by location/city
-    if (!empty($searchLocation)) {
-        $sql .= " AND (city LIKE :location OR hotel_name LIKE :location)";
-        $params[':location'] = '%' . $searchLocation . '%';
-    }
-    
-    // Filter by check-in date (hotel check_in should be <= search check_in)
-    if (!empty($searchCheckIn)) {
-        $sql .= " AND check_in <= :check_in";
+// Location filter: search in city field
+if (!empty($searchLocation)) {
+    $sql .= " AND city LIKE :location";
+    $params[':location'] = '%' . $searchLocation . '%';
+}
+
+// Date filtering: Hotel must be available for the entire requested stay period
+// Hotel's check_in must be <= user's check_in (hotel available from user's check-in or earlier)
+// Hotel's check_out must be >= user's check_out (hotel available until user's check-out or later)
+if (!empty($searchCheckIn) && !empty($searchCheckOut)) {
+    // Validate that check-out is after check-in
+    if ($searchCheckOut > $searchCheckIn) {
+        // Filter out invalid placeholder dates (1111-02-11 and 2222-02-22)
+        $sql .= " AND (check_in IS NULL OR (check_in != '1111-02-11' AND check_in <= :check_in))";
+        $sql .= " AND (check_out IS NULL OR (check_out != '2222-02-22' AND check_out >= :check_out))";
         $params[':check_in'] = $searchCheckIn;
-    }
-    
-    // Filter by check-out date (hotel check_out should be >= search check_out)
-    if (!empty($searchCheckOut)) {
-        $sql .= " AND check_out >= :check_out";
         $params[':check_out'] = $searchCheckOut;
     }
-    
-    $sql .= " ORDER BY id DESC";
-    
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $hotels = $stmt->fetchAll(PDO::FETCH_ASSOC);
-} catch(PDOException $e) {
-    // Silently handle errors - just show empty results
-    $hotels = [];
+} elseif (!empty($searchCheckIn)) {
+    // Only check-in provided: hotel must be available from check-in date or earlier
+    $sql .= " AND (check_in IS NULL OR (check_in != '1111-02-11' AND check_in <= :check_in))";
+    $params[':check_in'] = $searchCheckIn;
+} elseif (!empty($searchCheckOut)) {
+    // Only check-out provided: hotel must be available until check-out date or later
+    $sql .= " AND (check_out IS NULL OR (check_out != '2222-02-22' AND check_out >= :check_out))";
+    $params[':check_out'] = $searchCheckOut;
+} else {
+    // No date filters: exclude hotels with invalid placeholder dates
+    $sql .= " AND (check_in IS NULL OR check_in != '1111-02-11')";
+    $sql .= " AND (check_out IS NULL OR check_out != '2222-02-22')";
 }
+
+$sql .= " ORDER BY id DESC";
+
+$stmt = $pdo->prepare($sql);
+$stmt->execute($params);
+$hotels = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Function kept for future use, though currently the menu is hardcoded in HTML below
 function renderMenu(array $items): void {
@@ -102,19 +112,19 @@ function renderMenu(array $items): void {
     <div class="search-bar-wrapper">
         <form class="search-bar" action="menu.php" method="GET">
             <div class="search-field">
-                <input type="text" name="location" placeholder="Where are you going? 📍" value="<?= htmlspecialchars($searchLocation) ?>">
+                <input type="text" name="location" placeholder="Where are you going? 📍" value="<?php echo htmlspecialchars($searchLocation); ?>">
             </div>
             <div class="search-field">
-                <input type="date" name="check_in" placeholder="Check-in 📅" value="<?= htmlspecialchars($searchCheckIn) ?>">
+                <input type="date" name="check_in" placeholder="Check-in 📅" value="<?php echo htmlspecialchars($searchCheckIn); ?>">
             </div>
             <div class="search-field">
-                <input type="date" name="check_out" placeholder="Check-out 📅" value="<?= htmlspecialchars($searchCheckOut) ?>">
+                <input type="date" name="check_out" placeholder="Check-out 📅" value="<?php echo htmlspecialchars($searchCheckOut); ?>">
             </div>
             <div class="search-field">
                 <select name="guests">
-                    <option value="2-0-1">2 adults · 0 children · 1 room</option>
-                    <option value="1-0-1">1 adult · 0 children · 1 room</option>
-                    <option value="2-1-1">2 adults · 1 child · 1 room</option>
+                    <option>2 adults · 0 children · 1 room</option>
+                    <option>1 adult · 0 children · 1 room</option>
+                    <option>2 adults · 1 child · 1 room</option>
                 </select>
             </div>
             <button type="submit" class="search-btn">Search</button>
@@ -123,55 +133,59 @@ function renderMenu(array $items): void {
 
     <!-- Hotels Display Section -->
     <div class="hotels-section">
-        <div class="hotels-container">
-            <h2 class="hotels-title">Available Hotels</h2>
+        <div class="container">
+            <h2 class="section-title">Available Hotels</h2>
             
-            <?php if (empty($hotels)): ?>
-                <div class="no-results">
-                    <div class="no-results-icon">🔍</div>
-                    <h3>No results found</h3>
-                    <p>Try adjusting your search criteria or check back later for new listings.</p>
-                </div>
-            <?php else: ?>
+            <?php if (count($hotels) > 0): ?>
                 <div class="hotels-grid">
                     <?php foreach ($hotels as $hotel): ?>
                         <div class="hotel-card">
-                            <div class="hotel-image">
-                                <span class="hotel-icon">🏨</span>
+                            <div class="hotel-header">
+                                <h3 class="hotel-name"><?php echo htmlspecialchars($hotel['hotel_name']); ?></h3>
+                                <div class="hotel-stars">
+                                    <?php 
+                                    $stars = $hotel['stars'] ?? 0;
+                                    for ($i = 0; $i < 5; $i++): 
+                                        echo $i < $stars ? '⭐' : '☆';
+                                    endfor; 
+                                    ?>
+                                </div>
                             </div>
-                            <div class="hotel-content">
-                                <div class="hotel-header">
-                                    <h3 class="hotel-name"><?= htmlspecialchars($hotel['hotel_name']) ?></h3>
-                                    <div class="hotel-stars">
-                                        <?php for ($i = 0; $i < ($hotel['stars'] ?? 0); $i++): ?>
-                                            <span class="star">⭐</span>
-                                        <?php endfor; ?>
-                                    </div>
-                                </div>
+                            <div class="hotel-info">
                                 <div class="hotel-location">
-                                    <span class="location-icon">📍</span>
-                                    <span><?= htmlspecialchars($hotel['city']) ?></span>
+                                    <span class="icon">📍</span>
+                                    <span><?php echo htmlspecialchars($hotel['city']); ?></span>
                                 </div>
-                                <div class="hotel-dates">
-                                    <div class="date-item">
-                                        <span class="date-label">Check-in:</span>
-                                        <span class="date-value"><?= $hotel['check_in'] ? date('M d, Y', strtotime($hotel['check_in'])) : 'N/A' ?></span>
+                                <?php if (!empty($hotel['check_in']) && $hotel['check_in'] != '1111-02-11'): ?>
+                                    <div class="hotel-dates">
+                                        <span class="icon">📅</span>
+                                        <span>
+                                            <?php 
+                                            $checkIn = date('M d, Y', strtotime($hotel['check_in']));
+                                            $checkOut = !empty($hotel['check_out']) && $hotel['check_out'] != '2222-02-22' 
+                                                ? date('M d, Y', strtotime($hotel['check_out'])) 
+                                                : 'N/A';
+                                            echo $checkIn . ' - ' . $checkOut;
+                                            ?>
+                                        </span>
                                     </div>
-                                    <div class="date-item">
-                                        <span class="date-label">Check-out:</span>
-                                        <span class="date-value"><?= $hotel['check_out'] ? date('M d, Y', strtotime($hotel['check_out'])) : 'N/A' ?></span>
-                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="hotel-footer">
+                                <div class="hotel-price">
+                                    <span class="price-amount">$<?php echo number_format($hotel['price_per_night'], 2); ?></span>
+                                    <span class="price-label">per night</span>
                                 </div>
-                                <div class="hotel-footer">
-                                    <div class="hotel-price">
-                                        <span class="price-amount">$<?= number_format($hotel['price_per_night'], 2) ?></span>
-                                        <span class="price-label">per night</span>
-                                    </div>
-                                    <button class="book-btn">Book Now</button>
-                                </div>
+                                <button class="book-btn">Book Now</button>
                             </div>
                         </div>
                     <?php endforeach; ?>
+                </div>
+            <?php else: ?>
+                <div class="no-results">
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No results found</h3>
+                    <p>Try adjusting your search criteria or <a href="menu.php">view all hotels</a></p>
                 </div>
             <?php endif; ?>
         </div>
