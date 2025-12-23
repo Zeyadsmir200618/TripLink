@@ -1,30 +1,25 @@
 <?php
-// 1. ENABLE ERROR REPORTING
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// Start session FIRST before any output
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-session_start();
-
-// 2. SECURITY CHECK
+// 1. SECURITY CHECK
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
     header("Location: login.php");
     exit;
 }
 
-// 3. DATABASE CONNECTION - USING SINGLETON PATTERN
+// 2. DATABASE CONNECTION
 require_once __DIR__ . '/../config/database.php';
+$pdo = Database::getInstance()->getConnection();
 
+// 3. FETCH MESSAGES
 try {
-    // Get the singleton instance
-    $db = Database::getInstance();
-    $pdo = $db->getConnection();
-    
-    // 4. FETCH MESSAGES (Newest first)
     $stmt = $pdo->query("SELECT * FROM contact_messages ORDER BY created_at DESC");
     $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 } catch(PDOException $e) {
-    die("Database Connection Failed: " . $e->getMessage());
+    die("Database error: " . $e->getMessage());
 }
 ?>
 
@@ -34,39 +29,8 @@ try {
     <meta charset="UTF-8">
     <title>Manage Messages | Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
-        body { background: #f4f7fa; display: flex; min-height: 100vh; }
-        
-        /* SIDEBAR STYLES */
-        .sidebar {
-            width: 260px; background: #003580; color: white; padding: 20px;
-            display: flex; flex-direction: column;
-        }
-        .sidebar h2 { text-align: center; margin-bottom: 40px; }
-        .nav-links { list-style: none; }
-        .nav-links a { 
-            display: block; padding: 12px 15px; color: rgba(255,255,255,0.8); 
-            text-decoration: none; border-radius: 8px; margin-bottom: 10px;
-        }
-        .nav-links a:hover, .nav-links a.active { background: rgba(255,255,255,0.15); color: white; }
-        
-        /* MAIN CONTENT */
-        .main-content { flex-grow: 1; padding: 40px; }
-        .header { margin-bottom: 30px; }
-        
-        /* TABLE STYLES */
-        .data-table {
-            width: 100%; background: white; border-radius: 12px; overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-collapse: collapse;
-        }
-        .data-table th, .data-table td { padding: 15px 20px; text-align: left; border-bottom: 1px solid #eee; vertical-align: top; }
-        .data-table th { background: #f8f9fa; color: #555; font-weight: 600; }
-        .data-table tr:hover { background: #f1f1f1; }
-        
-        /* Limit message width so it doesn't break layout */
-        .msg-content { max-width: 400px; line-height: 1.5; color: #444; }
-    </style>
+    <link rel="stylesheet" href="/TripLink/public/css/base.css">
+    <link rel="stylesheet" href="/TripLink/public/css/admin.css">
 </head>
 <body>
 

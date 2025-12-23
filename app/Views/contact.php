@@ -1,5 +1,8 @@
 <?php
-session_start();
+// Start session FIRST before any output
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // --- 1. DATABASE CONNECTION - USING SINGLETON PATTERN ---
 require_once __DIR__ . '/../config/database.php';
@@ -56,214 +59,13 @@ unset($_SESSION['message']);
 <title>Contact Us | TripLink</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-/* ================================ 
-   GLOBAL 
-================================ */
-* {
-    margin: 0; padding: 0; box-sizing: border-box;
-}
-
-body {
-    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 80px;
-    color: #333;
-    
-    /* 🔴 FIX: This makes the font look smooth and not pixelated */
-    font-family: 'Poppins', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* ================================ 
-   NAVIGATION 
-================================ */
-.navbar {
-    width: 100%;
-    position: fixed;
-    top: 0; left: 0;
-    background: white;
-    padding: 15px 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    z-index: 1000;
-}
-
-.navbar .brand {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #003580;
-}
-
-.navbar .nav-links a {
-    text-decoration: none;
-    font-weight: 500;
-    color: #003580;
-    margin-left: 20px;
-    padding: 8px 15px;
-    border-radius: 5px;
-    transition: 0.2s;
-    font-size: 0.95rem;
-}
-
-.navbar .nav-links a:hover, 
-.navbar .nav-links a.active {
-    background-color: #f0f4fa;
-    color: #002861;
-}
-
-/* ================================ 
-   CONTACT CARD 
-================================ */
-.contact-container {
-    width: 100%;
-    max-width: 600px;
-    background: white;
-    padding: 45px;
-    border-radius: 16px;
-    box-shadow: 0 15px 35px rgba(0, 53, 128, 0.1);
-    margin: 40px 20px;
-    animation: slideUp 0.5s ease-out;
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ================================ 
-   HEADINGS & INFO 
-================================ */
-h1 {
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin-bottom: 10px;
-}
-
-h1 span { color: #003580; }
-
-.subtitle {
-    text-align: center;
-    color: #666;
-    margin-bottom: 30px;
-    font-size: 0.95rem;
-}
-
-.info-bar {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 35px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
-}
-
-.info-item {
-    text-align: center;
-    font-size: 0.85rem;
-    color: #555;
-}
-
-.info-item i {
-    display: block;
-    font-size: 1.5rem;
-    margin-bottom: 5px;
-    font-style: normal;
-}
-
-/* ================================ 
-   FORM INPUTS (FIXED)
-================================ */
-form { display: flex; flex-direction: column; gap: 20px; }
-
-label {
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: #4a5568;
-    margin-bottom: -10px;
-    display: block;
-}
-
-/* 🔴 FIX: Explicitly set font-family for inputs to override browser defaults */
-input, textarea, button {
-    width: 100%;
-    padding: 14px;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    background: #f7f9fc;
-    font-family: 'Poppins', sans-serif; /* FORCE THE FONT HERE */
-    font-size: 0.95rem;
-    color: #333;
-    outline: none;
-    transition: all 0.3s ease;
-    resize: vertical;
-}
-
-input::placeholder, textarea::placeholder {
-    color: #a0aec0; /* Softer placeholder color */
-}
-
-input:focus, textarea:focus {
-    background: white;
-    border-color: #003580;
-    box-shadow: 0 4px 12px rgba(0, 53, 128, 0.08);
-}
-
-textarea { min-height: 120px; }
-
-/* ================================ 
-   BUTTON 
-================================ */
-button {
-    width: 100%;
-    padding: 15px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: white;
-    border: none;
-    cursor: pointer;
-    border-radius: 8px;
-    background: linear-gradient(90deg, #003580 0%, #004cb8 100%);
-    box-shadow: 0 4px 15px rgba(0, 53, 128, 0.2);
-    transition: all 0.3s ease;
-}
-
-button:hover {
-    background: linear-gradient(90deg, #002861 0%, #003580 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 53, 128, 0.3);
-}
-
-/* ================================ 
-   FOOTER 
-================================ */
-.footer-text {
-    margin-top: 40px;
-    color: #888;
-    font-size: 0.85rem;
-    text-align: center;
-    padding-bottom: 20px;
-}
-</style>
+<link rel="stylesheet" href="/TripLink/public/css/base.css">
+<link rel="stylesheet" href="/TripLink/public/css/contact.css">
 </head>
 
 <body>
 
-    <div class="navbar">
-        <div class="brand">TripLink</div>
-        <div class="nav-links">
-            <a href="menu.php">Home</a>
-            <a href="contact.php" class="active">Contact</a>
-        </div>
-    </div>
+    <?php include __DIR__ . '/partials/navbar.php'; ?>
 
     <div class="contact-container">
         <h1>Get in <span>Touch</span></h1>
