@@ -1,13 +1,5 @@
 <?php
-// app/Models/Flight.php
 
-//  REMOVED 'class Database' block because it is already defined in config/database.php
-// Keeping it here causes the Fatal Error "Cannot declare class Database... name already in use"
-
-// ===========================
-// Flight Model
-// ===========================
-// ✅ RENAMED from FlightRepository to Flight so the Controller can use it.
 class Flight {
     private PDO $conn;
     private string $table = "flights";
@@ -16,12 +8,12 @@ class Flight {
         $this->conn = $db;
     }
 
-    public function addFlight(array $data): bool {
+    public function addFlight(array $data): bool|int {
         $sql = "INSERT INTO {$this->table} 
                 (flight_number, departure_city, arrival_city, departure_date, return_date, price, airline)
                 VALUES (:flight_number, :departure_city, :arrival_city, :departure_date, :return_date, :price, :airline)";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
+        $result = $stmt->execute([
             ':flight_number' => $data['flight_number'],
             ':departure_city' => $data['departure_city'],
             ':arrival_city' => $data['arrival_city'],
@@ -30,6 +22,12 @@ class Flight {
             ':price' => $data['price'],
             ':airline' => $data['airline']
         ]);
+        
+        if ($result) {
+            return (int)$this->conn->lastInsertId();
+        }
+        
+        return false;
     }
 
     public function getAll(): array {
@@ -69,9 +67,6 @@ class Flight {
     }
 }
 
-// ===========================
-// Flight Service (Optional - unused by current Controller but kept as requested)
-// ===========================
 class FlightService {
     private Flight $repository;
 
@@ -80,7 +75,7 @@ class FlightService {
         $this->repository = new Flight($db);
     }
 
-    public function addFlight(array $data): bool {
+    public function addFlight(array $data): bool|int {
         return $this->repository->addFlight($data);
     }
 
